@@ -14,6 +14,8 @@ Roadmap status reflects repository evidence as of 2026-11-24. Do not mark a phas
 
 ## PHASE 1 — Application foundation
 
+Milestone 1 complete. Basic API, UI and connectivity checks pass. Next is milestone 2, PostgreSQL configuration and Alembic migrations.
+
 Milestones: (1) repository configuration and backend/frontend foundations; (2) PostgreSQL configuration and Alembic migrations; (3) authentication, RBAC, and tenant isolation; (4) supplier management; (5) secure document upload/storage; (6) frontend integration and persisted-data dashboard; (7) automated test and static-check gate.
 
 - **Objective:** deliver a runnable, secure foundation with real persistence and no implied AI capability.

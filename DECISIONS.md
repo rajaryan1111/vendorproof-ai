@@ -51,3 +51,13 @@ Record decisions that materially constrain architecture, security, data handling
 - **Reasoning:** Local components provide an offline baseline; more complex model infrastructure lacks demonstrated need.
 - **Consequences:** OCR quality and supported document types must be measured; provider selection and data-sharing approval are deferred.
 - **Status:** Proposed.
+
+## ADR-006 — Run two local processes for milestone 1
+
+- **Date** 2026-11-24
+- **Context** The shell needs one read-only API health call.
+- **Decision** Run Uvicorn and Vite locally with configurable API address and CORS origins.
+- **Alternative considered** Containerize both processes and add Compose.
+- **Reasoning** Neither service currently depends on a database or another container.
+- **Consequences** Developers install the two runtimes. Revisit Compose when adding PostgreSQL.
+- **Status** Accepted for local development.

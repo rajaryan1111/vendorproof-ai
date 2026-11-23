@@ -1,6 +1,6 @@
 # VendorProof AI Product and UI Design
 
-**Status:** Initial design system direction; validate through implementation and user feedback. No UI is implemented yet.
+**Status:** Initial design system direction; validate through implementation and user feedback. Milestone 1 implements Overview with responsive navigation, connection status and retry.
 
 ## Principles
 

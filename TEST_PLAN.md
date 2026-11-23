@@ -1,6 +1,6 @@
 # VendorProof AI Test Plan
 
-**Status:** Strategy and acceptance criteria; implementation tests do not yet exist.
+**Status:** Milestone 1 tests exercise health, request IDs, allowed and denied origins, safe 404 responses, and dashboard loading, failure and retry. Later acceptance tests remain planned.
 
 ## Test layers
 

@@ -2,47 +2,47 @@
 
 VendorProof AI is planned as a supplier-document verification workspace for procurement, finance, compliance, and operations teams. It aims to organize supplier documents, surface missing, expired, inconsistent, or uncertain information, and help people resolve findings using traceable evidence. AI will not decide fraud or approve suppliers.
 
-**Project status:** Phase 0 documentation foundation. No application features are implemented yet. No customer validation, production deployment, or accuracy claims are made.
+**Project status** — Phase 1 milestone 1 is complete. The workspace overview checks the running API. Supplier and document workflows are planned for later milestones.
 
-## Planned capabilities
+## Run locally
 
-- Tenant-scoped supplier records and secure document intake.
-- Structured document extraction with evidence references and visible uncertainty.
-- Deterministic checks for missing, expired, and conflicting information.
-- Human review, correction drafts, and attributable decision history.
+From the repository root, open two terminals. The verified environment used Python 3.14, uv 0.12, Node 24.10 and npm 11. Install dependencies from the committed lockfiles.
 
-These are roadmap capabilities, not currently available software.
+```sh
+cd backend
+uv sync --locked
+uv run uvicorn app.main:app --no-access-log
+```
 
-## Preferred technology stack
+```sh
+cd frontend
+npm ci
+npm run dev
+```
 
-- Frontend: React, TypeScript, Vite, Tailwind CSS, React Router; Zod and form/query libraries where useful.
-- Backend: Python, FastAPI, Pydantic, SQLAlchemy 2.x, Alembic.
-- Database: PostgreSQL.
-- Document processing (planned): PyMuPDF, Tesseract OCR, Pillow only if justified.
-- Testing (planned): Pytest, Vitest, React Testing Library, Playwright where appropriate.
-- Local infrastructure (planned): Docker Compose and GitHub Actions.
+Open http://localhost:5173 and check the connection indicator. The browser calls http://localhost:8000/api/v1/health. The API returns `{"status":"ok"}` when running. This check measures process availability.
 
-The exact implementation and dependency versions will be selected and locked in Phase 1. No external API key is assumed.
+Defaults work without environment files. To override them, copy the relevant service's `.env.example` to `.env` in the same directory. Set `VP_CORS_ORIGINS` to a JSON list of exact frontend origins. Set `VITE_API_BASE_URL` to the API address including its version prefix. Vite embeds this public value at build time. Restart the development servers after changes. The optional `VP_DATABASE_URL` setting only validates a PostgreSQL URL. Local development requires just the API and Vite processes.
 
-## Repository structure
+## Quality checks
 
-The repository currently contains the canonical documentation at its root. Planned code layout will be decided in Phase 1; no source tree exists yet.
+In `backend/` run:
 
-## Development prerequisites and setup
+```sh
+uv run python -m compileall -q app tests
+uv run ruff check app tests
+uv run ruff format --check app tests
+uv run pytest -q
+```
 
-There is no runnable application yet, so no application setup command is available. Phase 1 will add reproducible prerequisites and commands for Python, Node.js, PostgreSQL/Docker, environment configuration, and migrations. Do not create real supplier data for local examples; use clearly labeled synthetic fixtures.
+In `frontend/` run:
 
-## Environment configuration
-
-No environment variables are defined yet. Future configuration must be documented in an example file containing placeholders only; secrets belong in an untracked local environment file or a secret manager and must never be committed.
-
-## Testing
-
-No test suite or test command exists yet. The planned test strategy and Phase 1 acceptance gate are in [TEST_PLAN.md](TEST_PLAN.md).
-
-## Roadmap
-
-See [PHASES.md](PHASES.md) for objectives, dependencies, deliverables, checks, acceptance criteria, and definitions of done. Current phase: Phase 0. The next milestone is to finish, validate, and publish the canonical documentation foundation; Phase 1 requires a subsequent instruction.
+```sh
+npm run lint
+npm run typecheck
+npm run build
+npm test
+```
 
 ## Canonical project documents
 

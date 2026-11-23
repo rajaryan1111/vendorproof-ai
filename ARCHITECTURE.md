@@ -1,6 +1,6 @@
 # VendorProof AI Architecture
 
-**Status:** Proposed architecture for implementation; no application code exists yet. Material alternatives remain open until a working milestone validates them.
+**Status:** Milestone 1 implements the React shell and FastAPI health endpoint. The persistence and business modules below remain planned. Material alternatives remain open until a working milestone validates them.
 
 ## System shape
 

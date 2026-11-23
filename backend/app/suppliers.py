@@ -139,4 +139,19 @@ def dashboard(
         "SELECT s.name,a.action,a.created_at FROM activity a JOIN suppliers s ON s.id=a.supplier_id AND s.organization_id=a.organization_id WHERE a.organization_id=:tenant ORDER BY a.id DESC LIMIT 10",
         tenant=user.tenant,
     )
-    return {**counts, "recent": [dict(r) for r in recent]}
+    pending = (
+        query(
+            conn,
+            """SELECT count(*) n FROM (SELECT DISTINCT ON (supplier_id) id FROM verification_runs WHERE organization_id=:tenant ORDER BY supplier_id,created_at DESC,id DESC) latest
+    JOIN verification_findings f ON f.run_id=latest.id JOIN suppliers s ON s.id=f.supplier_id AND NOT s.archived
+    WHERE f.organization_id=:tenant AND f.requires_review AND COALESCE((SELECT status FROM verification_reviews v WHERE v.finding_id=f.id ORDER BY seq DESC LIMIT 1),'open') NOT IN ('dismissed','resolved')""",
+            tenant=user.tenant,
+        )
+        .one()
+        .n
+    )
+    return {
+        "verification_pending": pending,
+        **counts,
+        "recent": [dict(r) for r in recent],
+    }

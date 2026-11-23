@@ -1,7 +1,8 @@
 from alembic import op
 
-revision="003_verification"
-down_revision="002_processing"
+revision = "003_verification"
+down_revision = "002_processing"
+
 
 def upgrade():
     op.execute("""
@@ -30,5 +31,8 @@ def upgrade():
     CREATE TRIGGER preserve_verification_review BEFORE UPDATE OR DELETE ON verification_reviews FOR EACH ROW EXECUTE FUNCTION vp_reject_history_change();
     """)
 
+
 def downgrade():
-    op.execute("DROP TABLE verification_reviews,verification_findings,verification_runs,verification_policies; DROP FUNCTION vp_reject_history_change()")
+    op.execute(
+        "DROP TABLE verification_reviews,verification_findings,verification_runs,verification_policies; DROP FUNCTION vp_reject_history_change()"
+    )

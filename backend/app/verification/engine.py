@@ -4,7 +4,9 @@ import json
 from collections import defaultdict
 from dataclasses import dataclass
 from itertools import combinations
+
 from pydantic import ValidationError
+
 from ..intelligence.schema import Report
 from .normalize import address, calendar_date, company, identifier
 
@@ -97,15 +99,15 @@ def finding(rule, outcome, why, refs):
         if review
         else "informational"
     )
-    return dict(
-        rule=rule,
-        outcome=outcome,
-        explanation=why,
-        evidence=refs,
-        severity=severity,
-        quality=quality,
-        requires_review=review,
-    )
+    return {
+        "rule": rule,
+        "outcome": outcome,
+        "explanation": why,
+        "evidence": refs,
+        "severity": severity,
+        "quality": quality,
+        "requires_review": review,
+    }
 
 
 def inspect_document(doc, policy, as_of, groups):
@@ -137,6 +139,16 @@ def inspect_document(doc, policy, as_of, groups):
     scheme = rule.identifier_scheme if rule else None
     aliases = ALIASES if policy.legal_suffix_aliases else {}
     findings = []
+    for page in report.pages:
+        if page.warning:
+            findings.append(
+                finding(
+                    "page_quality",
+                    "insufficient",
+                    "Extraction flagged this page: " + page.warning,
+                    [{**doc.ref(), "page": page.number}],
+                )
+            )
     for c in report.candidates:
         if c.status == "conflicting":
             findings.append(

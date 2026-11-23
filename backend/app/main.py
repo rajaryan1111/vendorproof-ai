@@ -15,6 +15,7 @@ from .db import db, engine_for, query
 from .documents import router as document_router
 from .intelligence.jobs import router as processing_router
 from .suppliers import router as supplier_router
+from .verification.api import router as verification_router
 
 logger = logging.getLogger("vendorproof.requests")
 logger.setLevel(logging.INFO)
@@ -36,6 +37,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     api.state.engine = engine_for(settings) if settings.database_url else None
     api.state.settings = settings
+    api.include_router(verification_router)
     api.include_router(auth_router)
     api.include_router(processing_router)
     api.include_router(document_router)

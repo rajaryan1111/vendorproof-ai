@@ -12,6 +12,7 @@ import {
   type ActionFunctionArgs,
 } from "react-router-dom";
 import { apiBase } from "./api";
+import { Verification } from "./Verification";
 import { Processing } from "./Processing";
 import { Dashboard } from "./Dashboard";
 
@@ -30,6 +31,7 @@ type Overview = {
   archived: number;
   documents: number;
   needs_review: number;
+  verification_pending: number;
   recent: { action: string; name: string; created_at: string }[];
 };
 
@@ -152,7 +154,7 @@ export function Home() {
       <h1>Dashboard</h1>
       <div className="metrics">
         {(
-          ["total", "active", "archived", "documents", "needs_review"] as const
+          ["total", "active", "archived", "documents", "needs_review","verification_pending"] as const
         ).map((k) => (
           <section key={k}>
             <p>{k === "total" ? "Total suppliers" : k.replace("_", " ")}</p>
@@ -312,6 +314,7 @@ export function Detail() {
           </Form>
         )}
       </section>
+      <Verification key={s.id+user.role} sid={s.id} role={user.role} archived={s.archived}/>
       <section>
         <h2>Documents</h2>
         <Feedback />

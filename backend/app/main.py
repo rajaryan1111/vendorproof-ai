@@ -9,6 +9,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 
+from .auth import router as auth_router
+from .db import db,engine_for,query
+from fastapi import Depends
 from .config import Settings
 
 logger = logging.getLogger("vendorproof.requests")
@@ -29,11 +32,23 @@ def failure(status: int, code: str, headers=None):
 def create_app(settings: Settings) -> FastAPI:
     api = FastAPI(title="VendorProof AI")
 
+    api.state.engine=engine_for(settings) if settings.database_url else None
+    api.state.settings=settings
+    api.include_router(auth_router)
+
+    @api.get("/api/v1/health/db")
+    def readiness(conn=Depends(db)):
+        query(conn,"SELECT 1").one()
+        return Health(status="ok")
+
     @api.middleware("http")
     async def audit(request: Request, call_next):
         identifier = uuid4().hex
         try:
-            response = await call_next(request)
+            if request.method in {"POST","PATCH","DELETE","PUT"} and (request.headers.get("X-VP-Request") != "1" or request.headers.get("origin") not in [None,*settings.cors_origins]):
+                response=failure(403,"forbidden_origin")
+            else:
+                response = await call_next(request)
         except Exception:  # noqa: BLE001 - boundary returns a redacted 500 response.
             response = failure(500, "internal_error")
         response.headers["X-Request-ID"] = identifier
@@ -57,7 +72,7 @@ def create_app(settings: Settings) -> FastAPI:
         return failure(422, "invalid_request")
 
     api.add_middleware(
-        CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["GET"]
+        CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["GET","POST","PATCH","DELETE"], allow_headers=["X-VP-Request","Content-Type","X-Filename"],allow_credentials=True
     )
 
     @api.get("/api/v1/health", response_model=Health)

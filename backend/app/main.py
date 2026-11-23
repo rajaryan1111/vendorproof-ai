@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 
+from .suppliers import router as supplier_router
 from .auth import router as auth_router
 from .db import db,engine_for,query
 from fastapi import Depends
@@ -35,6 +36,7 @@ def create_app(settings: Settings) -> FastAPI:
     api.state.engine=engine_for(settings) if settings.database_url else None
     api.state.settings=settings
     api.include_router(auth_router)
+    api.include_router(supplier_router)
 
     @api.get("/api/v1/health/db")
     def readiness(conn=Depends(db)):

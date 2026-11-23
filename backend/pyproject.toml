@@ -2,8 +2,24 @@
 name="vendorproof-api"
 version="0.1.0"
 requires-python=">=3.11,<3.15"
-dependencies=["fastapi>=0.115,<1","uvicorn>=0.34,<1","pydantic-settings>=2.8,<3","pydantic>=2.10,<3"]
+dependencies=[
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.34,<1",
+    "pydantic-settings>=2.8,<3",
+    "pydantic>=2.10,<3",
+    "sqlalchemy>=2,<3",
+    "alembic>=1.20.1",
+    "psycopg[binary]>=3.3.9",
+    "argon2-cffi>=25.1.0",
+    "pypdf>=7.1.1",
+]
 [dependency-groups]
-dev=["pytest>=8,<10","httpx>=0.28,<0.29","ruff>=0.11,<1"]
+dev=[
+    "pytest>=8,<10",
+    "httpx>=0.28,<0.29",
+    "ruff>=0.11,<1",
+    "pip-audit>=2.10.1",
+    "playwright>=1.65.2",
+]
 [tool.pytest.ini_options]
 pythonpath=["."]

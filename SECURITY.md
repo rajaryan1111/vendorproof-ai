@@ -19,6 +19,12 @@
 
 Authentication establishes user identity; tenant membership establishes organization context. Proposed permissions: administrators manage membership/configuration and all records; operators manage suppliers and upload documents; reviewers access evidence and record review outcomes; auditors read records/history. Sensitive banking fields require a specific permission in addition to a broad role. Final matrix must be encoded centrally and covered by positive and negative tests. AI-derived findings confer no approval permission.
 
+## Phase 1 permissions and sessions
+
+All four roles can read their own dashboard, directory and document metadata. Administrators and operators can create/edit active suppliers and upload, replace or archive documents. Only administrators can archive suppliers and download raw documents because a PDF may contain bank information. Reviewer and auditor access is read-only. Provisioning requires local operator database access.
+
+Passwords use Argon2id. An eight-hour HttpOnly SameSite=Strict cookie holds a random opaque value. PostgreSQL stores its SHA-256 digest and the membership ID. Logout deletes the session. Mutations require a custom header and check any supplied Origin against the CORS allowlist. Login limits are 60 attempts per client address per five minutes. Configure trusted proxy handling before deployment.
+
 ## Threat boundaries
 
 Assume browser requests, document filenames/content, OCR/model output, and external provider responses are untrusted. Threats include tenant IDOR, malicious PDFs/images, parser exploits, malware, prompt injection, XSS through extracted text, credential theft, accidental bank-data disclosure, abusive uploads, and deletion/audit gaps. Use defense in depth; do not trust file extensions, client validations, model assertions, or opaque IDs as authorization.

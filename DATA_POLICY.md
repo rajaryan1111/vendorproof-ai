@@ -31,6 +31,10 @@ Retention duration is configurable only after customer and legal requirements ar
 
 Use synthetic, clearly labeled demo data only. Never use actual customer or supplier documents in tests or examples. Keep fixtures fabricated, non-identifying, and free of realistic credentials/account numbers. Do not commit uploaded files, local databases, private documents, or secrets. Test files should be generated or synthetic and excluded from production paths.
 
+## Phase 1 local file lifecycle
+
+Only PDFs up to 5 MiB are accepted. Bytes are stored under tenant and document UUIDs, with owner-only file permissions. The development host supplies disk encryption. Replacement creates a new immutable object and archives the previous record in one database transaction. Archiving hides metadata and disables download. Physical purge, backup expiry, malware scanning and orphan reconciliation require deployment-specific implementation. A crash between object write and database commit can leave a private unreferenced file. Use synthetic data locally.
+
 ## Backup and incident handling
 
 Production backups must be encrypted, access-restricted, monitored, and periodically restore-tested; define recovery targets before launch. Suspected disclosure or loss triggers the organization's incident process, provider review, access containment, evidence preservation, and applicable notification assessment. No incident-response SLA is claimed here.

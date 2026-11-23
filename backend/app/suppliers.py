@@ -44,8 +44,8 @@ def directory(
     q: str = Query("", max_length=160),
     archived: bool = False,
     page: int = Query(1, ge=1, le=1000000),
-    user=Depends(identity),
-    conn=Depends(db),
+    user=Depends(identity, scope="function"),
+    conn=Depends(db, scope="function"),
 ):
     return [
         dict(r)
@@ -61,7 +61,11 @@ def directory(
 
 
 @router.post("/suppliers", status_code=201)
-def create(body: Supplier, user=Depends(writer), conn=Depends(db)):
+def create(
+    body: Supplier,
+    user=Depends(writer, scope="function"),
+    conn=Depends(db, scope="function"),
+):
     row = query(
         conn,
         "INSERT INTO suppliers(organization_id,name,contact) VALUES(:tenant,:name,:contact) RETURNING *",
@@ -73,12 +77,21 @@ def create(body: Supplier, user=Depends(writer), conn=Depends(db)):
 
 
 @router.get("/suppliers/{sid}")
-def detail(sid: UUID, user=Depends(identity), conn=Depends(db)):
+def detail(
+    sid: UUID,
+    user=Depends(identity, scope="function"),
+    conn=Depends(db, scope="function"),
+):
     return dict(lookup(conn, user, sid))
 
 
 @router.patch("/suppliers/{sid}")
-def update(sid: UUID, body: Supplier, user=Depends(writer), conn=Depends(db)):
+def update(
+    sid: UUID,
+    body: Supplier,
+    user=Depends(writer, scope="function"),
+    conn=Depends(db, scope="function"),
+):
     if lookup(conn, user, sid, True).archived:
         raise HTTPException(409)
     row = query(
@@ -93,7 +106,11 @@ def update(sid: UUID, body: Supplier, user=Depends(writer), conn=Depends(db)):
 
 
 @router.delete("/suppliers/{sid}")
-def archive(sid: UUID, user=Depends(writer), conn=Depends(db)):
+def archive(
+    sid: UUID,
+    user=Depends(writer, scope="function"),
+    conn=Depends(db, scope="function"),
+):
     if user.role != "admin":
         raise HTTPException(403)
     if not lookup(conn, user, sid, True).archived:
@@ -108,7 +125,9 @@ def archive(sid: UUID, user=Depends(writer), conn=Depends(db)):
 
 
 @router.get("/dashboard")
-def dashboard(user=Depends(identity), conn=Depends(db)):
+def dashboard(
+    user=Depends(identity, scope="function"), conn=Depends(db, scope="function")
+):
     counts = query(
         conn,
         """SELECT count(*) total,count(*) FILTER(WHERE NOT archived) active,count(*) FILTER(WHERE archived) archived,

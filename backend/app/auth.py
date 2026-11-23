@@ -4,6 +4,7 @@ from secrets import token_urlsafe
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, SecretStr
 
 from .db import db, query
@@ -23,7 +24,7 @@ def digest(value):
     return sha256(value.encode()).hexdigest()
 
 
-def identity(request: Request, conn=Depends(db)):
+def identity(request: Request, conn=Depends(db, scope="function")):
     row = query(
         conn,
         """SELECT u.id AS actor,u.email,m.organization_id AS tenant,m.role,o.name AS workspace
@@ -36,22 +37,35 @@ def identity(request: Request, conn=Depends(db)):
     return row
 
 
-def writer(user=Depends(identity)):
+def writer(user=Depends(identity, scope="function")):
     if user.role not in ("operator", "admin"):
         raise HTTPException(403)
     return user
 
 
 @router.post("/login")
-def login(body: Login, request: Request, response: Response, conn=Depends(db)):
-    # Commit failed-attempt counters independently of the login transaction.
-    with request.app.state.engine.begin() as limiter:
-        attempts = limiter.exec_driver_sql(
-            """INSERT INTO login_limits VALUES(%s,now(),1) ON CONFLICT(key) DO UPDATE SET attempts=CASE WHEN login_limits.starts<now()-interval '5 minutes' THEN 1 ELSE login_limits.attempts+1 END, starts=CASE WHEN login_limits.starts<now()-interval '5 minutes' THEN now() ELSE login_limits.starts END RETURNING attempts""",
-            (digest(request.client.host),),
-        ).scalar_one()
+def login(
+    body: Login,
+    request: Request,
+    response: Response,
+    conn=Depends(db, scope="function"),
+):
+    attempts = (
+        query(
+            conn,
+            """
+        INSERT INTO login_limits VALUES(:key,now(),1)
+        ON CONFLICT(key) DO UPDATE SET
+          attempts=CASE WHEN login_limits.starts<now()-interval '5 minutes' THEN 1 ELSE login_limits.attempts+1 END,
+          starts=CASE WHEN login_limits.starts<now()-interval '5 minutes' THEN now() ELSE login_limits.starts END
+        RETURNING attempts""",
+            key=digest(request.client.host),
+        )
+        .one()
+        .attempts
+    )
     if attempts > 60:
-        raise HTTPException(429)
+        return JSONResponse({"error": {"code": "http_429"}}, status_code=429)
     row = query(
         conn,
         "SELECT m.id,u.password_hash FROM memberships m JOIN users u ON u.id=m.user_id JOIN organizations o ON o.id=m.organization_id WHERE email=:email AND o.name=:workspace",
@@ -63,7 +77,7 @@ def login(body: Login, request: Request, response: Response, conn=Depends(db)):
             row.password_hash if row else dummy, body.password.get_secret_value()
         )
     except VerifyMismatchError:
-        raise HTTPException(401) from None
+        return JSONResponse({"error": {"code": "http_401"}}, status_code=401)
     if not row:
         raise HTTPException(401)
     token = token_urlsafe(32)
@@ -90,13 +104,16 @@ def login(body: Login, request: Request, response: Response, conn=Depends(db)):
 
 
 @router.get("/account")
-def account(user=Depends(identity)):
+def account(user=Depends(identity, scope="function")):
     return dict(user)
 
 
 @router.post("/logout")
 def logout(
-    request: Request, response: Response, user=Depends(identity), conn=Depends(db)
+    request: Request,
+    response: Response,
+    user=Depends(identity, scope="function"),
+    conn=Depends(db, scope="function"),
 ):
     query(
         conn,

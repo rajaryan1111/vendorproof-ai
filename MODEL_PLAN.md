@@ -2,6 +2,8 @@
 
 **Status:** Planned for Phase 2 onward. Phase 0 and Phase 1 contain no AI extraction capability.
 
+Phase 1 labels a validated PDF as stored. This status records successful intake only.
+
 ## Processing pipeline
 
 1. Validate upload and create an immutable document version.

@@ -1,6 +1,6 @@
 # VendorProof AI Architecture
 
-**Status:** Milestone 1 implements the React shell and FastAPI health endpoint. The persistence and business modules below remain planned. Material alternatives remain open until a working milestone validates them.
+**Status:** Phase 1 implements the React workspace, authenticated API, PostgreSQL schema and private local PDF store. Processing and verification remain planned. Local development runs PostgreSQL, Uvicorn and Vite. Material alternatives remain open until a working milestone validates them.
 
 ## System shape
 
@@ -26,7 +26,7 @@ sequenceDiagram
   participant Store as Private file store
   participant DB as PostgreSQL
   Reviewer->>Web: Upload supplier document
-  Web->>API: Authenticated multipart request
+  Web->>API: Authenticated PDF body and filename header
   API->>API: Authorize tenant, validate size/type/signature
   API->>Store: Store under generated opaque key
   API->>DB: Persist metadata and audit event
@@ -39,11 +39,11 @@ React, TypeScript, Vite, Tailwind CSS, and React Router are the preferred initia
 
 ## Backend and API
 
-Use FastAPI with Pydantic request/response schemas and SQLAlchemy 2.x. Organize by domain modules (identity/access, suppliers, documents, verification/review, audit) with explicit service and persistence boundaries. Expose versioned JSON APIs under `/api/v1`; document errors with stable codes and avoid exposing stack traces or raw sensitive values. Uploads use authenticated multipart requests with server-enforced limits. The API derives tenant/user identity from validated authentication context, never from a trusted client-supplied tenant identifier.
+Use FastAPI with Pydantic request/response schemas and SQLAlchemy 2.x. Organize by domain modules (identity/access, suppliers, documents, verification/review, audit) with explicit service and persistence boundaries. Expose versioned JSON APIs under `/api/v1`; document errors with stable codes and avoid exposing stack traces or raw sensitive values. Uploads use authenticated application/pdf requests with server-enforced limits. The API derives tenant/user identity from validated authentication context, never from a trusted client-supplied tenant identifier.
 
 ## Database
 
-PostgreSQL is the system of record for users, tenant membership, suppliers, document metadata, processing state, findings, reviews, and audit records. Use SQLAlchemy models and Alembic migrations; migrations are the only schema change path. Apply tenant identifiers and constraints deliberately, index common tenant-scoped lookups, and enforce tenant scope in every repository/service query. Consider PostgreSQL row-level security only as defense in depth after connection-pool/session behavior is designed and tested; it does not replace application authorization.
+PostgreSQL stores identities, membership, sessions, suppliers, PDF metadata, login limits and supplier activity. Findings and review tables are deferred. The API uses SQLAlchemy 2 connections with bound SQL and Alembic migrations; migrations are the only schema change path. Apply tenant identifiers and constraints deliberately, index common tenant-scoped lookups, and enforce tenant scope in every repository/service query. Consider PostgreSQL row-level security only as defense in depth after connection-pool/session behavior is designed and tested; it does not replace application authorization.
 
 ## File storage
 
@@ -59,7 +59,7 @@ Phase 1 may process small development tasks synchronously only if request limits
 
 ## Authentication and authorization
 
-Phase 1 must choose and implement a secure authentication approach before exposing tenant data. Password-based auth, if selected, uses a maintained password-hashing library and secure session/token handling. Role checks and tenant membership checks are server-side on every request. Initial roles: workspace administrator, operator, reviewer, and read-only auditor; exact permission matrix belongs in SECURITY.md and must be tested. Do not store secrets in source or browser storage without a threat-model decision.
+Phase 1 uses locally provisioned Argon2id passwords and opaque, revocable membership sessions. Role checks and tenant membership checks are server-side on every request. Initial roles: workspace administrator, operator, reviewer, and read-only auditor; exact permission matrix belongs in SECURITY.md and must be tested. Do not store secrets in source or browser storage without a threat-model decision.
 
 ## Audit and observability
 
@@ -67,4 +67,4 @@ Audit consequential actions (identity/role changes, supplier updates, upload/rep
 
 ## Deployment and integrations
 
-Initial local development uses Docker Compose for PostgreSQL and documented app commands; deployment topology is undecided. Production requires TLS, managed secret injection, private durable storage, backups, migration discipline, monitoring, and a malware-scanning integration boundary. External OCR/model, email, identity, and storage services sit behind adapters; no API key or service availability is assumed. See DATA_POLICY.md and SECURITY.md.
+Verified local development uses native PostgreSQL 16 and documented app commands; deployment topology is undecided. Production requires TLS, managed secret injection, private durable storage, backups, migration discipline, monitoring, and a malware-scanning integration boundary. External OCR/model, email, identity, and storage services sit behind adapters; no API key or service availability is assumed. See DATA_POLICY.md and SECURITY.md.

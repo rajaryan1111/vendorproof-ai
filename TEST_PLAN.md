@@ -2,6 +2,10 @@
 
 **Status:** Milestone 1 tests exercise health, request IDs, allowed and denied origins, safe 404 responses, and dashboard loading, failure and retry. Later acceptance tests remain planned.
 
+## Executable Phase 1 gate
+
+Run the README quality commands. Pytest covers API and SQL transactions through real PostgreSQL, role/tenant denial, PDF validation and replacement, session revocation, and clean migration/rollback. Playwright drives Chrome against Vite and Uvicorn, checks required fields, creates and edits a supplier, uploads a synthetic PDF, retrieves its bytes, verifies outside-tenant denial, restarts the API and signs out. Vitest covers API connection-state recovery.
+
 ## Test layers
 
 - **Backend unit:** domain validation, tenant-scoped services, normalization/rules, state transitions, audit event creation, and error mapping with isolated dependencies.

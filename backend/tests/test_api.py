@@ -14,3 +14,12 @@ def test_health_and_errors(monkeypatch):
     denied = client.get("/api/v1/health", headers={"Origin": "http://other.test"})
     assert "access-control-allow-origin" not in denied.headers
     assert client.get("/missing").json() == {"error": {"code": "http_404"}}
+
+
+def test_cookie_and_cors_defaults():
+    import pytest
+    from pydantic import ValidationError
+
+    assert Settings(_env_file=None, cookie_secure=True).cookie_secure
+    with pytest.raises(ValidationError):
+        Settings(cors_origins=["*"])

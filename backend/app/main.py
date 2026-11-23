@@ -40,7 +40,7 @@ def create_app(settings: Settings) -> FastAPI:
     api.include_router(supplier_router)
 
     @api.get("/api/v1/health/db")
-    def readiness(conn=Depends(db)):
+    def readiness(conn=Depends(db, scope="function")):
         query(conn, "SELECT 1").one()
         return Health(status="ok")
 
@@ -57,6 +57,7 @@ def create_app(settings: Settings) -> FastAPI:
                 response = await call_next(request)
         except Exception:  # noqa: BLE001 - boundary returns a redacted 500 response.
             response = failure(500, "internal_error")
+        response.headers["Cache-Control"] = "no-store"
         response.headers["X-Request-ID"] = identifier
         logger.info(
             json.dumps(

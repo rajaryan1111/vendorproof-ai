@@ -61,7 +61,11 @@ def document(conn, user, sid, key):
 
 
 @router.get("")
-def documents(sid: UUID, user=Depends(identity), conn=Depends(db)):
+def documents(
+    sid: UUID,
+    user=Depends(identity, scope="function"),
+    conn=Depends(db, scope="function"),
+):
     lookup(conn, user, sid)
     return [
         {**r, "status": "stored"}
@@ -80,8 +84,8 @@ async def upload(
     request: Request,
     replaces: UUID | None = None,
     x_filename: str = Header(max_length=160),
-    user=Depends(writer),
-    conn=Depends(db),
+    user=Depends(writer, scope="function"),
+    conn=Depends(db, scope="function"),
 ):
     if (
         not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_. -]*\.pdf", x_filename, re.IGNORECASE)
@@ -125,7 +129,11 @@ async def upload(
 
 @router.get("/{key}")
 def download(
-    sid: UUID, key: UUID, request: Request, user=Depends(identity), conn=Depends(db)
+    sid: UUID,
+    key: UUID,
+    request: Request,
+    user=Depends(identity, scope="function"),
+    conn=Depends(db, scope="function"),
 ):
     row = document(conn, user, sid, key)
     if user.role != "admin":
@@ -139,7 +147,12 @@ def download(
 
 
 @router.delete("/{key}")
-def archive(sid: UUID, key: UUID, user=Depends(writer), conn=Depends(db)):
+def archive(
+    sid: UUID,
+    key: UUID,
+    user=Depends(writer, scope="function"),
+    conn=Depends(db, scope="function"),
+):
     if lookup(conn, user, sid, True).archived:
         raise HTTPException(409)
     document(conn, user, sid, key)

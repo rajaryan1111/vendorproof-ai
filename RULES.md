@@ -18,4 +18,5 @@ This file is authoritative for project engineering. When a change conflicts with
 14. Treat uploaded documents, extracted content, model output, and provider responses as untrusted input.
 15. Keep documentation consistent with implemented behavior; mark planned capabilities as planned.
 16. Work one roadmap phase at a time. Phase 0 documentation must be completed and reviewed before Phase 1 implementation.
-17. Never use destructive Git operations or force-push without explicit authorization. Use meaningful commits and verify any push.
+17. Use a disposable PostgreSQL database and synthetic PDFs for integration gates.
+18. Never use destructive Git operations or force-push without explicit authorization. Use meaningful commits and verify any push.

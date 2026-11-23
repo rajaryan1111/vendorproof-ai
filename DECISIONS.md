@@ -61,3 +61,13 @@ Record decisions that materially constrain architecture, security, data handling
 - **Reasoning** Neither service currently depends on a database or another container.
 - **Consequences** Developers install the two runtimes. Revisit Compose when adding PostgreSQL.
 - **Status** Accepted for local development.
+
+## ADR-007 — Membership sessions and restricted original documents
+
+- **Date** 2026-11-24
+- **Context** A workspace can contain sensitive supplier PDFs.
+- **Decision** Provision identities locally, resolve membership and role on each request, and limit original file downloads to administrators.
+- **Alternatives considered** Public registration, browser bearer tokens, direct file URLs.
+- **Reasoning** Server-side sessions support immediate revocation and tenant-scoped download checks.
+- **Consequences** Authentication requires PostgreSQL. Reviewers can inspect metadata. Raw files need administrator access until finer permissions exist.
+- **Status** Accepted for Phase 1.

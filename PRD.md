@@ -53,6 +53,10 @@ Personas are initial design assumptions, not validated research findings.
 - **NFR-006 Performance:** define measurable latency targets after baseline workload and deployment are known; do not claim targets or achieved performance without measurement.
 - **NFR-007 Privacy:** collect and retain only data needed for verification and audit, with tenant-scoped access and a documented deletion lifecycle.
 
+## Delivery status
+
+Phase 1 delivers FR-001, secure PDF intake and inventory within FR-002/003, supplier activity history, membership-based access, dashboard metrics and authentication. Extraction, findings, correction drafts and approval decisions belong to subsequent phases.
+
 ## MVP scope
 
 Phase 1 establishes the application, PostgreSQL schema/migrations, authentication and role/tenant foundations, supplier CRUD, secure local/development document upload, a persisted-data dashboard, and automated tests. Later phases add extraction, evidence-backed deterministic verification, exception resolution, and production operations. Phase 1 must not imply AI verification exists.

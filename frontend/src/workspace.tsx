@@ -12,6 +12,7 @@ import {
   type ActionFunctionArgs,
 } from "react-router-dom";
 import { apiBase } from "./api";
+import { Processing } from "./Processing";
 import { Dashboard } from "./Dashboard";
 
 type Account = { email: string; role: string; workspace: string };
@@ -28,6 +29,7 @@ type Overview = {
   active: number;
   archived: number;
   documents: number;
+  needs_review: number;
   recent: { action: string; name: string; created_at: string }[];
 };
 
@@ -149,9 +151,11 @@ export function Home() {
     <>
       <h1>Dashboard</h1>
       <div className="metrics">
-        {(["total", "active", "archived", "documents"] as const).map((k) => (
+        {(
+          ["total", "active", "archived", "documents", "needs_review"] as const
+        ).map((k) => (
           <section key={k}>
-            <p>{k === "total" ? "Total suppliers" : k}</p>
+            <p>{k === "total" ? "Total suppliers" : k.replace("_", " ")}</p>
             <strong>{data[k]}</strong>
           </section>
         ))}
@@ -320,6 +324,11 @@ export function Detail() {
                 {d.bytes} bytes · {d.status}
               </p>
             </div>
+            <Processing
+              path={"/suppliers/" + s.id + "/documents/" + d.id + "/processing"}
+              editable={edit}
+              restricted={user.role !== "admin"} reviewer={user.role === "reviewer"}
+            />
             {user.role === "admin" && (
               <a href={apiBase + "/suppliers/" + s.id + "/documents/" + d.id}>
                 Download

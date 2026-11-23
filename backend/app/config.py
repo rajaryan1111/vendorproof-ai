@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlsplit
 
 from pydantic import PostgresDsn, field_validator
@@ -10,6 +11,8 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
     database_url: PostgresDsn | None = None
     cookie_secure: bool = True
+    ocr_language: str = "eng"
+    extraction_provider: Literal["offline"] = "offline"
     storage_root: Path = Path.home() / ".vendorproof" / "objects"
 
     @field_validator("cors_origins")

@@ -13,6 +13,7 @@ from .auth import router as auth_router
 from .config import Settings
 from .db import db, engine_for, query
 from .documents import router as document_router
+from .intelligence.jobs import router as processing_router
 from .suppliers import router as supplier_router
 
 logger = logging.getLogger("vendorproof.requests")
@@ -36,6 +37,7 @@ def create_app(settings: Settings) -> FastAPI:
     api.state.engine = engine_for(settings) if settings.database_url else None
     api.state.settings = settings
     api.include_router(auth_router)
+    api.include_router(processing_router)
     api.include_router(document_router)
     api.include_router(supplier_router)
 

@@ -131,7 +131,7 @@ def dashboard(
     counts = query(
         conn,
         """SELECT count(*) total,count(*) FILTER(WHERE NOT archived) active,count(*) FILTER(WHERE archived) archived,
-    (SELECT count(*) FROM documents WHERE organization_id=:tenant AND NOT archived) documents FROM suppliers WHERE organization_id=:tenant""",
+    (SELECT count(*) FROM documents WHERE organization_id=:tenant AND NOT archived) documents, (SELECT count(*) FROM documents d WHERE d.organization_id=:tenant AND NOT d.archived AND (SELECT state FROM processing_attempts j WHERE j.document_id=d.id ORDER BY attempt DESC LIMIT 1)='needs_review') needs_review FROM suppliers WHERE organization_id=:tenant""",
         tenant=user.tenant,
     ).one()
     recent = query(

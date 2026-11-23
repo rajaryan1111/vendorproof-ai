@@ -12,6 +12,7 @@ from starlette.concurrency import run_in_threadpool
 
 from .auth import identity, writer
 from .db import db, query
+from .intelligence.jobs import enqueue
 from .suppliers import event, lookup
 
 router = APIRouter(prefix="/api/v1/suppliers/{sid}/documents")
@@ -124,6 +125,7 @@ async def upload(
     )
     event(conn, user, sid, "Replaced document" if replaces else "Uploaded document")
     PrivateFiles(request.app.state.settings.storage_root).put(user.tenant, key, data)
+    enqueue(conn, user.tenant, sid, key)
     return {"id": key, "status": "stored"}
 
 

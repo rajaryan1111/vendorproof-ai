@@ -1,0 +1,190 @@
+{
+  "dataset": "synthetic-v1",
+  "documents": 11,
+  "counts": {
+    "readable_truth": 12,
+    "readable_recovered": 12,
+    "empty_correct": 13,
+    "pages": 13,
+    "empty_truth": 1,
+    "slots": 85,
+    "abstentions": 70,
+    "missing_truth": 67,
+    "missing_predictions": 58,
+    "missing_correct": 58,
+    "positive": 17,
+    "localized": 14,
+    "ocr_pages": 3,
+    "ocr_read": 3,
+    "char_errors": 22,
+    "chars": 207,
+    "word_errors": 9,
+    "words": 25
+  },
+  "page_success": 1.0,
+  "empty_detection_accuracy": 1.0,
+  "failure_rate": 0.0,
+  "CER": 0.1063,
+  "WER": 0.36,
+  "ocr_page_success": 1.0,
+  "classification": {
+    "registration": {
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "tax": {
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "bank": {
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "insurance": {
+      "precision": 1.0,
+      "recall": 0.5
+    },
+    "agreement": {
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "unknown": {
+      "precision": 0.6667,
+      "recall": 1.0
+    }
+  },
+  "confusion_truth_rows": {
+    "registration": {
+      "registration": 2,
+      "tax": 0,
+      "bank": 0,
+      "insurance": 0,
+      "agreement": 0,
+      "unknown": 0
+    },
+    "tax": {
+      "registration": 0,
+      "tax": 2,
+      "bank": 0,
+      "insurance": 0,
+      "agreement": 0,
+      "unknown": 0
+    },
+    "bank": {
+      "registration": 0,
+      "tax": 0,
+      "bank": 1,
+      "insurance": 0,
+      "agreement": 0,
+      "unknown": 0
+    },
+    "insurance": {
+      "registration": 0,
+      "tax": 0,
+      "bank": 0,
+      "insurance": 1,
+      "agreement": 0,
+      "unknown": 1
+    },
+    "agreement": {
+      "registration": 0,
+      "tax": 0,
+      "bank": 0,
+      "insurance": 0,
+      "agreement": 2,
+      "unknown": 0
+    },
+    "unknown": {
+      "registration": 0,
+      "tax": 0,
+      "bank": 0,
+      "insurance": 0,
+      "agreement": 0,
+      "unknown": 2
+    }
+  },
+  "positive_field_exact": 0.8235,
+  "positive_field_normalized": 0.8824,
+  "per_field": {
+    "legal_name": {
+      "n": 1,
+      "exact": 1,
+      "normalized": 1
+    },
+    "registration_number": {
+      "n": 1,
+      "exact": 1,
+      "normalized": 1
+    },
+    "incorporation_date": {
+      "n": 1,
+      "exact": 1,
+      "normalized": 1
+    },
+    "tax_id": {
+      "n": 1,
+      "exact": 1,
+      "normalized": 1
+    },
+    "business_name": {
+      "n": 1,
+      "exact": 1,
+      "normalized": 1
+    },
+    "account_holder": {
+      "n": 1,
+      "exact": 1,
+      "normalized": 1
+    },
+    "bank_name": {
+      "n": 1,
+      "exact": 1,
+      "normalized": 1
+    },
+    "policy_number": {
+      "n": 2,
+      "exact": 1,
+      "normalized": 1
+    },
+    "expiry_date": {
+      "n": 2,
+      "exact": 2,
+      "normalized": 2
+    },
+    "insurer": {
+      "n": 1,
+      "exact": 1,
+      "normalized": 1
+    },
+    "parties": {
+      "n": 2,
+      "exact": 1,
+      "normalized": 2
+    },
+    "agreement_date": {
+      "n": 1,
+      "exact": 1,
+      "normalized": 1
+    },
+    "issue_date": {
+      "n": 1,
+      "exact": 1,
+      "normalized": 1
+    },
+    "policyholder": {
+      "n": 1,
+      "exact": 0,
+      "normalized": 0
+    }
+  },
+  "missing_precision": 1.0,
+  "missing_recall": 0.8657,
+  "evidence_localization": 0.8235,
+  "abstention": 0.8235,
+  "invalid_output_rate": 0.0,
+  "median_seconds": 0.003,
+  "max_seconds": 0.165,
+  "peak_python_allocated_bytes": 9459552,
+  "provider_tokens": 0,
+  "external_calls": 0
+}

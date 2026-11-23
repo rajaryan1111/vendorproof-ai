@@ -10,11 +10,11 @@ from urllib.request import urlopen
 from uuid import uuid4
 
 from playwright.sync_api import expect, sync_playwright
-from test_workspace import sample_pdf
 
 from app.config import Settings
 from app.db import engine_for
 from app.provision import provision
+from evaluation.v1.fixtures import make_pdf
 
 
 def start(command, cwd, env, url):
@@ -108,7 +108,12 @@ def test_browser_workflow(tmp_path):
                 page.get_by_text("Edit supplier", exact=True).click()
                 page.get_by_label("Supplier name").fill("Updated synthetic supplier")
                 page.get_by_role("button", name="Save supplier").click()
-                pdf = sample_pdf()
+                pdf = make_pdf(
+                    {
+                        "pages": ["Insurance certificate\nPolicy number: SYNTH-42"],
+                        "media": ["scan"],
+                    }
+                )
                 page.get_by_label("PDF document").set_input_files(
                     {
                         "name": "synthetic.pdf",
@@ -121,6 +126,27 @@ def test_browser_workflow(tmp_path):
                 link = page.get_by_role("link", name="Download")
                 url = link.get_attribute("href")
                 assert page.request.get(url).body() == pdf
+                job = page.request.get(url + "/processing").json()[0]["id"]
+                subprocess.run(
+                    [sys.executable, "-m", "app.intelligence.worker", "--job", job],
+                    cwd=backend,
+                    env=env,
+                    check=True,
+                    timeout=120,
+                )
+                expect(
+                    page.get_by_role("button", name="View extraction 1")
+                ).to_be_visible(timeout=12000)
+                page.get_by_role("button", name="View extraction 1").click()
+                expect(
+                    page.get_by_role("heading", name="Extraction candidates")
+                ).to_be_visible()
+                assert (
+                    page.request.get(url + "/processing/" + job).json()[
+                        "classification"
+                    ]["category"]
+                    == "insurance"
+                )
                 other = browser.new_context()
                 assert other.request.post(
                     api + "/login",
@@ -132,6 +158,7 @@ def test_browser_workflow(tmp_path):
                     },
                 ).ok
                 assert other.request.get(url).status == 404
+                assert other.request.get(url + "/processing/" + job).status == 404
                 supplier_url = url.split("/documents/")[0]
                 assert other.request.get(supplier_url).status == 404
                 stop(api_proc)

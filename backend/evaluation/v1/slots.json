@@ -1,0 +1,60 @@
+{
+  "registration": [
+    "legal_name",
+    "trading_name",
+    "registered_address",
+    "registration_number",
+    "document_date",
+    "issuing_authority",
+    "incorporation_date"
+  ],
+  "tax": [
+    "legal_name",
+    "trading_name",
+    "registered_address",
+    "registration_number",
+    "document_date",
+    "issuing_authority",
+    "tax_id",
+    "business_name",
+    "issue_date",
+    "expiry_date"
+  ],
+  "bank": [
+    "legal_name",
+    "trading_name",
+    "registered_address",
+    "registration_number",
+    "document_date",
+    "issuing_authority",
+    "account_holder",
+    "bank_name",
+    "ifsc"
+  ],
+  "insurance": [
+    "legal_name",
+    "trading_name",
+    "registered_address",
+    "registration_number",
+    "document_date",
+    "issuing_authority",
+    "policyholder",
+    "policy_number",
+    "coverage_date",
+    "expiry_date",
+    "insurer"
+  ],
+  "agreement": [
+    "legal_name",
+    "trading_name",
+    "registered_address",
+    "registration_number",
+    "document_date",
+    "issuing_authority",
+    "parties",
+    "agreement_date",
+    "expiry_date",
+    "signature_evidence"
+  ],
+  "unknown": []
+}

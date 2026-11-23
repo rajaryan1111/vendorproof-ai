@@ -32,6 +32,16 @@ Full integrated release gate: 19 pytest cases passed, including real OCR, old-sc
 
 Synthetic-v1: 11 PDFs, 13 pages, 3 scored scan pages. All 12 nonempty pages yielded text, both unknown documents remained unknown, and one degraded insurance scan was misclassified as unknown. CER 10.63%, WER 36%, exact positive-field matches 14/17, normalized 15/17, strict source localization 14/17. No external calls. The committed results JSON records the confusion matrix, field counts, abstention, timings and allocation measurements. The small synthetic templates and weak degraded-scan results limit generalization.
 
+## Phase 3 release
+
+Branch `feat/phase-3-verification-intelligence` started at verified Phase 2 commit `2d5bd78caaeb2abfb751af3e88705760f6c32b09`. Run `git log -1 --format=%H --grep='^docs: record Phase 3 acceptance and handoff$'` for the release reference.
+
+Migration 003 adds verification_policies, verification_runs, verification_findings and verification_reviews. Per-supplier policy revisions encode tenant requirements, conditional applicability, identifier namespace and expiry window. verify/1 compares validated Phase 2 candidates, timestamps results against a UTC calendar date and preserves each immutable source version. The historical checklist and evidence remain attached to their run. Snapshots reuse IDs for identical inputs. A changed policy, document attempt, date or rule version produces a distinct run. Reviewers and admins record reasoned actions. Exact raw evidence is administrator-only and access is rechecked when opening a span.
+
+Release gates: 65 pytest cases, including PostgreSQL migration/rollback and the full Chrome acceptance workflow; four Vitest cases; Python compile, Ruff lint/format, ESLint, TypeScript, production build and both dependency audits. The acceptance flow used real synthetic uploads, normalized and conflicting names, expired coverage, a missing agreement, and a degraded OCR page. It tested a separate reviewer's dismissal, actor attribution, outside-tenant denials, restart persistence and archived-source redaction.
+
+Synthetic verification_v1: 41 target cases across 14 rule families. 24/24 expected review decisions and 17/17 negative decisions, 11/41 abstentions, 39/39 labeled value references localized, 52 review-required findings across all rules. No representative workload or customer accuracy baseline exists. Runs are manual, support at most 30 active PDF versions, and use configured namespaces and supported date formats. Upstream Starlette/PyMuPDF deprecations and React Router bundling notices remain.
+
 ## Exact next phase
 
-Phase 3, verification intelligence. Use the versioned Phase 2 candidate and evidence contract when designing deterministic cross-document comparison. Begin only under separate authorization.
+Phase 4 — exception resolution. Begin with assignment and queue ownership for existing findings, followed by corrective-action suggestions and editable correction-request drafts under human control. Phase 3 stops with internal review and audit history.

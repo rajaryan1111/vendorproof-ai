@@ -1,6 +1,6 @@
 # VendorProof AI Model and Document Intelligence Plan
 
-**Status:** Phase 2 ships a deterministic offline extractor. Comparison and resolution are later roadmap items.
+**Status:** Phase 2 ships a deterministic offline extractor. Phase 3 consumes its validated outputs using the deterministic verify/1 rules.
 
 Phase 1 labels a validated PDF as stored. This status records successful intake only.
 
@@ -51,3 +51,11 @@ Version fields/1 defines common and class-specific keys. A single recognized hea
 The synthetic-v1 corpus holds reference page transcripts, rendering instructions and expected values, with an independent slot manifest. The evaluation generates PDF bytes in memory. CER and WER use edit distance on whitespace-collapsed scanned-page transcripts. Field exact and whitespace-normalized matches use the 17 labeled values as denominator. Localization requires the reference page, exact value and matching source slice. Missing-value precision/recall treat conflicts as a separate state. Abstention counts null predictions across all expected slots. The confusion matrix uses truth rows and predicted columns. Runtime measures local parser and extraction calls, excluding PDF generation, worker startup, database and UI. Peak memory counts Python allocations only; native parser and OCR process RSS are excluded.
 
 See backend/evaluation/v1/results.json for per-field counts, all six classification rows and denominators. The corpus uses few synthetic templates in English, with a single degraded scan. These measurements exercise the implementation and cannot establish production accuracy.
+
+## Verification inputs and limits
+
+verify/1 revalidates the fields/1 report, document UUID, SHA-256 and source offsets before evaluation. Name comparison covers legal/business names, policyholders and bank account holders. Case, spaces and selected punctuation normalize deterministically. Explicit policy enables the Ltd/Limited and Pvt Ltd/Private Limited aliases. Other legal forms remain distinct. Address normalization retains unit numbers and ranges and expands recognized street suffixes. Exact local identifiers retain formatting. UK company numbers remove spaces and normalize case within their configured namespace. Tax and registration keys never share a comparison group.
+
+Unambiguous ISO dates, English day-month-name dates and slash dates with one valid interpretation use calendar dates. Expiry is inclusive through the stated date in UTC. A positive warning window includes the last day and the configured threshold. Zero disables approaching-expiry alerts. Registration expiry requires a jurisdiction-specific policy; its current extraction schema may lack an expiry candidate. Distinct incorporation dates, future issue dates and starts after expiry can raise review findings.
+
+Unsupported source data, failed processing and uncertain classifications produce abstentions. An OCR score below 90 cannot establish a comparable candidate, and a cross-document difference involving OCR requires source inspection. This threshold is an engineering heuristic. Severity is a triage label. No verification rule uses a model or a probability of fraud.

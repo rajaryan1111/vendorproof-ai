@@ -22,3 +22,5 @@ This file is authoritative for project engineering. When a change conflicts with
 18. Never use destructive Git operations or force-push without explicit authorization. Use meaningful commits and verify any push.
 
 19. Keep extraction attempts versioned and immutable after completion. Validate provenance against the captured source segment and run the synthetic evaluation when changing the extractor.
+
+20. Version verification semantics and policy changes. Preserve the complete run basis, explicitly abstain on unsupported evidence, and keep consequential review actions attributed and append-only.

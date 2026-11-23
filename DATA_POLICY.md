@@ -42,3 +42,7 @@ Production backups must be encrypted, access-restricted, monitored, and periodic
 ## Derived page text and candidates
 
 Processing persists full page text, OCR boxes and scores, source slices and candidate values in PostgreSQL. Treat the entire report as restricted, including its backups. Archiving a document disables API access to all attempts but retains stored results. A tenant purge must cover processing_attempts alongside document bytes, supplier metadata and backups. Evaluate only generated synthetic PDFs. Worker stderr and parser text do not enter request logs.
+
+## Verification records
+
+Treat stored original and normalized values, citations, policy context and review notes as confidential or restricted according to the source. Findings reference exact immutable document versions and extraction attempts. Missing-document evidence consists of the policy and frozen inventory. An absent document has no PDF snippet. Archiving an original restricts access to its historical raw values and source-span endpoint. Include all four verification tables and their backups in deployment retention and controlled purge procedures. Review reasons should describe actions taken and omit bank details or copied document text.

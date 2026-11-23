@@ -54,3 +54,7 @@ At desktop sizes, support a two-pane verification workspace. At tablet/mobile wi
 ## Processing on supplier detail
 
 Each PDF displays its current stage and numbered attempts. Poll queued/processing attempts and expose a safe failure code with a retry action for authorized writers. Successful extraction has a needs-review state. Administrators can inspect raw evidence by page and method. Reviewers see validation statuses and source page locations. The dashboard counts active document versions whose latest extraction needs review. Raw engine confidence, when available, describes OCR recognition only.
+
+## Supplier verification workspace
+
+Administrators configure requirements on the supplier detail page. Each historical run shows its evaluation date and rule/policy versions. The checklist distinguishes received, missing, conditional, unconfirmed and inapplicable requirements. Side-by-side evidence identifies source versions, pages and spans. The administrator can open a cited span; a reviewer sees coordinates and outcomes. The page distinguishes no run, insufficient evidence and conflicts. A review action requires a reason and records an attributed history entry. Dashboard verification_pending counts review-required findings on the latest snapshots of active suppliers, excluding resolved and dismissed findings.

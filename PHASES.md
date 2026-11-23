@@ -40,6 +40,8 @@ Complete on feat/phase-2-document-intelligence. The baseline supports local text
 
 ## PHASE 3 — Verification intelligence
 
+Complete on feat/phase-3-verification-intelligence. The verified baseline includes policy versions, deterministic findings, restricted evidence navigation, human review history, and synthetic evaluation. Exception assignments and correction drafts belong to Phase 4.
+
 - **Objective:** surface deterministic evidence-backed discrepancies and completeness issues.
 - **Scope:** normalization; configurable required-document detection; expiry validation; contradiction checks; evidence references; severity and confidence/uncertainty.
 - **Dependencies:** Phase 2 provenance and validated extraction.

@@ -1,6 +1,6 @@
 # VendorProof AI Architecture
 
-**Status:** Phase 1 implements the React workspace, authenticated API, PostgreSQL schema and private local PDF store. Phase 2 adds local document extraction. Cross-document verification is planned for Phase 3. Local development runs PostgreSQL, Uvicorn and Vite. Material alternatives remain open until a working milestone validates them.
+**Status:** Phase 1 implements the React workspace, authenticated API, PostgreSQL schema and private local PDF store. Phase 2 adds local document extraction. Phase 3 compares supported candidates in versioned supplier snapshots. Local development runs PostgreSQL, Uvicorn and Vite. Material alternatives remain open until a working milestone validates them.
 
 ## System shape
 
@@ -76,3 +76,11 @@ Alembic 002_processing adds one table with a composite foreign key to the existi
 The worker claims a row with FOR UPDATE SKIP LOCKED, commits the claim, runs the parser outside the database transaction and publishes once using a conditional update. Allowed transitions are uploaded → queued → processing → needs_review or failed. A worker marks processing attempts older than three minutes failed. Operators and administrators retry manually, up to ten attempts per document. Supplying the last attempt UUID as the reprocessing precondition makes duplicate requests idempotent. No automatic retries consume CPU after bad input.
 
 Under /api/v1/suppliers/{sid}/documents/{key}/processing, GET lists attempt history and POST queues work. POST ?after={last-id} requests another attempt. GET /{attempt-id} returns administrator evidence. GET /{attempt-id}?summary=true returns a reviewer-safe field and page summary. The API checks the document tenant, supplier and archival state before accessing reports.
+
+## Verification persistence and API
+
+Migration 003 adds four tables. verification_policies stores tenant and supplier scope, policy version, configuration, author and timestamp. verification_runs records the actor, UTC evaluation date, rule and policy revisions, fingerprint, document inventory and checklist. verification_findings stores stable UUIDs, rule, outcome, severity, evidence quality, citation data, review requirement and timestamps. verification_reviews stores attributed append-only decisions with a database trigger preventing changes and deletion. Composite foreign keys enforce scope.
+
+The API serializes configuration, run creation and review on the supplier row. One database query snapshots the latest processing attempt for each active document. A SHA-256 fingerprint covers the ordered input versions, digests, attempts and states, date, policy version and engine version. Identical inputs reuse the run and finding IDs. Changes produce another snapshot. The local synchronous engine accepts at most 30 active versions per supplier. Larger runs fail explicitly.
+
+Under /api/v1/suppliers/{id}/verification: GET /policy and PUT /policy?previous=N read and revise configuration. POST /runs evaluates, GET /runs lists snapshots and GET /runs/{run} returns policy, inventory, checklist and findings. POST /findings/{finding}/review appends an event with the expected previous sequence. GET /findings/{finding}/sources/{index} resolves one authorized citation against its stored extraction. Verification does not modify supplier or extraction state.

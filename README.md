@@ -75,3 +75,11 @@ In `frontend/`, run `npm run lint`, `npm run typecheck`, `npm run build`, `npm t
 - [PHASES.md](PHASES.md) — phased roadmap
 - [DECISIONS.md](DECISIONS.md) — architecture decision records
 - [MEMORY.md](MEMORY.md) — project handoff and current state
+
+## Verify a supplier
+
+Apply `uv run alembic upgrade head` from backend and start the existing API, React app and local processing worker. Upload and process the supplier PDFs. From **Verification workspace**, an administrator opens **Configure requirements**, enters the supplier's policy context, selects required categories and date checks, and saves a revision. Blank conditions apply to every supplier evaluated under that specific policy. An unmet condition disables the requirement. Missing context leaves it unresolved.
+
+Choose **Run verification**. Review the dated inventory, checklist and source comparisons. Administrators can open cited spans. Reviewers can record an acknowledgement, clarification request, resolution or dismissal with a reason. Choose **Verification history** to inspect an earlier run. Changes to inputs take effect on the next run.
+
+Run `uv run python -m evaluation.verification_v1.measure` in backend to reproduce the synthetic verification evaluation. [Reference cases](backend/evaluation/verification_v1/cases.json) and [measured results](backend/evaluation/verification_v1/results.json) include the exact targeted outcomes and denominators.

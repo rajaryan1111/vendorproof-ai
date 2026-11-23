@@ -54,3 +54,30 @@ GitHub Actions should install from pinned/locked project dependencies, run backe
 ## Phase 2 quality gate
 
 Run the backend suite with Tesseract English data, Chrome and a disposable migrated PostgreSQL database as described in README. Include evaluation/ in Python lint, compile and format checks. The suite checks corpus extraction, real OCR, malformed files, source integrity, provider errors, uncertainty, prompt-like content, exact report permissions, repeated requests, history preservation, lease recovery and cross-tenant rejection. Browser acceptance uploads a synthetic scan, runs the local worker, opens the report and checks classification before the Phase 1 persistence and logout assertions. Vitest covers literal rendering of untrusted evidence. Rerun evaluation.v1.measure to compare CER, WER, classification, abstentions and provenance against the versioned results.
+
+## Phase 3 acceptance and measurements
+
+The full pytest suite includes PostgreSQL migration of Phase 1 and Phase 2 rows, API authorization, idempotency, policy and rule version changes, stale reviews, terminal decisions, audit immutability, and exact source access. Live Chrome acceptance retains the earlier supplier, upload and extraction workflow, then configures policy, detects a match and conflict, checks an expired policy, missing agreement and degraded page, resolves a source span, and records a dismissal as a reviewer. It verifies foreign-tenant denial and persistence after restarting both API and web processes.
+
+verification_v1 labels one target rule and outcome per synthetic case. Positive means the target calls for review, including insufficient evidence. Precision and recall are computed per target rule. False-positive and false-negative rates use the negative and positive target denominators. Localization checks document, page and exact segment slice against the labeled value. Review workload counts all review-required findings across all cases, including secondary rules. Timings cover the pure comparison function, excluding PDF extraction, SQL and UI. These are designed regression cases, not representative supplier samples.
+
+### Synthetic verification baseline
+
+| Target rule | Review targets detected | Negative targets correctly cleared | Precision | Recall |
+|---|---:|---:|---:|---:|
+| name | 3/3 | 2/2 | 100% | 100% |
+| bank_holder | 2/2 | 1/1 | 100% | 100% |
+| identifier | 1/1 | 2/2 | 100% | 100% |
+| address | 1/1 | 1/1 | 100% | 100% |
+| incorporation_date | 1/1 | 1/1 | 100% | 100% |
+| expiry_date | 5/5 | 1/1 | 100% | 100% |
+| requirement | 4/4 | 2/2 | 100% | 100% |
+| classification | 1/1 | 1/1 | 100% | 100% |
+| extraction | 1/1 | 1/1 | 100% | 100% |
+| within_document | 1/1 | 1/1 | 100% | 100% |
+| page_quality | 1/1 | 1/1 | 100% | 100% |
+| comparison | 1/1 | 1/1 | 100% | 100% |
+| issue_date | 1/1 | 1/1 | 100% | 100% |
+| date_order | 1/1 | 1/1 | 100% | 100% |
+
+All 41 exact target outcomes matched. FP 0/17, FN 0/24. The 11 intended abstentions count as targeted review decisions. All 39 value references matched the labeled document, digest, attempt, page and exact source slice. Evaluation generated 52 review-required findings across all rules; that count includes secondary findings outside the targeted label. Recorded execution time is available in the results JSON.

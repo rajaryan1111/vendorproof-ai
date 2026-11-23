@@ -81,3 +81,13 @@ Record decisions that materially constrain architecture, security, data handling
 - Reasoning: PostgreSQL is already required. Reports are read by immutable version and attempt, so additional per-field tables provide little benefit at this phase.
 - Consequences: Operators run a worker alongside the API. Reprocessing retains earlier results. Cross-report analysis may later justify separate indexed fields.
 - Status: Accepted.
+
+## ADR-009 — Supplier-scoped policy revisions and immutable verification snapshots
+
+- Date: 2026-11-24
+- Context: Different suppliers have different requirements, and a reviewer must reproduce what was compared.
+- Decision: Administrators configure policies within tenant/supplier scope. Deterministic runs bind effective date, policy revision, rules and exact extraction inputs. Human decisions append to a finding's history.
+- Alternatives considered: One global checklist, recalculating on every read, and replacing prior findings.
+- Reasoning: Explicit scope supports conditional rules without assuming customer or legal requirements. Snapshots preserve the original review basis when documents change.
+- Consequences: Run verification again after a policy, date or document change. An older run remains available for inspection. The initial bounded engine runs locally.
+- Status: Accepted.

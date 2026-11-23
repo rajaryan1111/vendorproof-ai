@@ -20,4 +20,6 @@ def upgrade():
 
 
 def downgrade():
-    op.execute("DROP TABLE login_limits,activity,documents,suppliers,sessions,memberships,users,organizations")
+    op.execute(
+        "DROP TABLE login_limits,activity,documents,suppliers,sessions,memberships,users,organizations"
+    )

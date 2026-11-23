@@ -1,4 +1,5 @@
 from alembic import context
+
 from app.config import Settings
 from app.db import engine_for
 

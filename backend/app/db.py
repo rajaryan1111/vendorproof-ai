@@ -5,7 +5,9 @@ from sqlalchemy import create_engine, text
 def engine_for(settings):
     if not settings.database_url:
         raise RuntimeError("Set VP_DATABASE_URL")
-    return create_engine(str(settings.database_url), pool_pre_ping=True, hide_parameters=True)
+    return create_engine(
+        str(settings.database_url), pool_pre_ping=True, hide_parameters=True
+    )
 
 
 def db(request: Request):

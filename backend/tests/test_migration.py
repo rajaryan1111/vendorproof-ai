@@ -31,6 +31,12 @@ def test_migrate_empty_schema(monkeypatch):
                 "INSERT INTO documents(id,organization_id,supplier_id,filename,bytes,digest) VALUES(%s,%s,%s,'synthetic.pdf',1,'fixture')",
                 (doc, org, supplier),
             )
+        command.upgrade(config, "002_processing")
+        with isolated.begin() as conn:
+            conn.exec_driver_sql(
+                "INSERT INTO processing_attempts(organization_id,supplier_id,document_id,attempt,implementation,schema_version) VALUES(%s,%s,%s,1,'local/1','fields/1')",
+                (org, supplier, doc),
+            )
         command.upgrade(config, "head")
         with isolated.begin() as conn:
             assert (
@@ -43,7 +49,7 @@ def test_migrate_empty_schema(monkeypatch):
                 conn.exec_driver_sql(
                     "SELECT count(*) FROM processing_attempts"
                 ).scalar_one()
-                == 0
+                == 1
             )
         isolated.dispose()
         assert set(inspect(engine).get_table_names(schema=schema)) == {

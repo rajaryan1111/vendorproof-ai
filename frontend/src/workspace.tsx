@@ -154,7 +154,14 @@ export function Home() {
       <h1>Dashboard</h1>
       <div className="metrics">
         {(
-          ["total", "active", "archived", "documents", "needs_review","verification_pending"] as const
+          [
+            "total",
+            "active",
+            "archived",
+            "documents",
+            "needs_review",
+            "verification_pending",
+          ] as const
         ).map((k) => (
           <section key={k}>
             <p>{k === "total" ? "Total suppliers" : k.replace("_", " ")}</p>
@@ -314,7 +321,12 @@ export function Detail() {
           </Form>
         )}
       </section>
-      <Verification key={s.id+user.role} sid={s.id} role={user.role} archived={s.archived}/>
+      <Verification
+        key={s.id + user.role}
+        sid={s.id}
+        role={user.role}
+        archived={s.archived}
+      />
       <section>
         <h2>Documents</h2>
         <Feedback />
@@ -330,7 +342,8 @@ export function Detail() {
             <Processing
               path={"/suppliers/" + s.id + "/documents/" + d.id + "/processing"}
               editable={edit}
-              restricted={user.role !== "admin"} reviewer={user.role === "reviewer"}
+              restricted={user.role !== "admin"}
+              reviewer={user.role === "reviewer"}
             />
             {user.role === "admin" && (
               <a href={apiBase + "/suppliers/" + s.id + "/documents/" + d.id}>

@@ -1,0 +1,654 @@
+[
+  {
+    "id": "identical",
+    "rule": "name",
+    "outcome": "exact_match",
+    "docs": [
+      "Company registration certificate\nLegal name: Orchid Ltd",
+      "Tax registration document\nRegistered business name: Orchid Ltd"
+    ],
+    "values": [
+      "Orchid Ltd",
+      "Orchid Ltd"
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "aliases",
+    "rule": "name",
+    "outcome": "normalized_match",
+    "docs": [
+      "Company registration certificate\nLegal name: Orchid Pvt Ltd",
+      "Tax registration document\nRegistered business name: Orchid Private Limited"
+    ],
+    "values": [
+      "Orchid Pvt Ltd",
+      "Orchid Private Limited"
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "unrelated",
+    "rule": "name",
+    "outcome": "conflict",
+    "docs": [
+      "Company registration certificate\nLegal name: Orchid Limited",
+      "Tax registration document\nRegistered business name: Flint Limited"
+    ],
+    "values": [
+      "Orchid Limited",
+      "Flint Limited"
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "similar",
+    "rule": "name",
+    "outcome": "conflict",
+    "docs": [
+      "Company registration certificate\nLegal name: Orchid Metals",
+      "Tax registration document\nRegistered business name: Orchids Metals"
+    ],
+    "values": [
+      "Orchid Metals",
+      "Orchids Metals"
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "suffix_distinct",
+    "rule": "name",
+    "outcome": "conflict",
+    "docs": [
+      "Company registration certificate\nLegal name: Flint LLC",
+      "Tax registration document\nRegistered business name: Flint Ltd"
+    ],
+    "values": [
+      "Flint LLC",
+      "Flint Ltd"
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "holder_alias",
+    "rule": "bank_holder",
+    "outcome": "normalized_match",
+    "docs": [
+      "Tax registration document\nRegistered business name: Orchid Pvt Ltd",
+      "Bank verification letter\nAccount holder: Orchid Private Limited"
+    ],
+    "values": [
+      "Orchid Pvt Ltd",
+      "Orchid Private Limited"
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "holder_diff",
+    "rule": "bank_holder",
+    "outcome": "conflict",
+    "docs": [
+      "Tax registration document\nRegistered business name: Oak Ltd",
+      "Bank verification letter\nAccount holder: Elm Ltd"
+    ],
+    "values": [
+      "Oak Ltd",
+      "Elm Ltd"
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "ocr_difference",
+    "rule": "bank_holder",
+    "outcome": "insufficient",
+    "docs": [
+      "Tax registration document\nRegistered business name: Elm Ltd",
+      "Bank verification letter\nAccount holder: E1m Ltd"
+    ],
+    "ocr": 1,
+    "values": [
+      "Elm Ltd",
+      "E1m Ltd"
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "identifier_equal",
+    "rule": "identifier",
+    "outcome": "normalized_match",
+    "docs": [
+      "Company registration certificate\nRegistration number: AB 000123",
+      "Company registration certificate\nRegistration number: ab000123"
+    ],
+    "values": [
+      "AB 000123",
+      "ab000123"
+    ],
+    "rules": [
+      {
+        "category": "registration",
+        "identifier_scheme": "uk_company"
+      }
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "identifier_conflict",
+    "rule": "identifier",
+    "outcome": "conflict",
+    "docs": [
+      "Company registration certificate\nRegistration number: AB000123",
+      "Company registration certificate\nRegistration number: AB000124"
+    ],
+    "values": [
+      "AB000123",
+      "AB000124"
+    ],
+    "rules": [
+      {
+        "category": "registration",
+        "identifier_scheme": "uk_company"
+      }
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "addr_format",
+    "rule": "address",
+    "outcome": "normalized_match",
+    "docs": [
+      "Company registration certificate\nRegistered address: 12 Oak Rd.",
+      "Company registration certificate\nRegistered address: 12 oak Road"
+    ],
+    "values": [
+      "12 Oak Rd.",
+      "12 oak Road"
+    ],
+    "rules": [
+      {
+        "category": "registration",
+        "identifier_scheme": "uk_company"
+      }
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "addr_unit",
+    "rule": "address",
+    "outcome": "conflict",
+    "docs": [
+      "Company registration certificate\nRegistered address: 12 Oak Road Unit A",
+      "Company registration certificate\nRegistered address: 12 Oak Road Unit B"
+    ],
+    "values": [
+      "12 Oak Road Unit A",
+      "12 Oak Road Unit B"
+    ],
+    "rules": [
+      {
+        "category": "registration",
+        "identifier_scheme": "uk_company"
+      }
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "incorporation_same",
+    "rule": "incorporation_date",
+    "outcome": "normalized_match",
+    "docs": [
+      "Company registration certificate\nIncorporation date: 2020-10-21",
+      "Company registration certificate\nIncorporation date: 21 Oct 2020"
+    ],
+    "values": [
+      "2020-10-21",
+      "21 Oct 2020"
+    ],
+    "rules": [
+      {
+        "category": "registration",
+        "identifier_scheme": "uk_company"
+      }
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "incorporation_diff",
+    "rule": "incorporation_date",
+    "outcome": "conflict",
+    "docs": [
+      "Company registration certificate\nIncorporation date: 2020-10-21",
+      "Company registration certificate\nIncorporation date: 2020-11-21"
+    ],
+    "values": [
+      "2020-10-21",
+      "2020-11-21"
+    ],
+    "rules": [
+      {
+        "category": "registration",
+        "identifier_scheme": "uk_company"
+      }
+    ],
+    "source_documents": [
+      1,
+      2
+    ]
+  },
+  {
+    "id": "unrelated_ids",
+    "rule": "identifier",
+    "outcome": "none",
+    "docs": [
+      "Company registration certificate\nRegistration number: AB000123",
+      "Tax registration document\nTax ID: Z-42"
+    ],
+    "rules": [
+      {
+        "category": "registration",
+        "identifier_scheme": "uk_company"
+      },
+      {
+        "category": "tax",
+        "identifier_scheme": "exact_local"
+      }
+    ]
+  },
+  {
+    "id": "expired",
+    "rule": "expiry_date",
+    "outcome": "expired",
+    "docs": [
+      "Insurance certificate\nExpiry date: 2026-11-23"
+    ],
+    "rules": [
+      {
+        "category": "insurance",
+        "expiry": true
+      }
+    ],
+    "values": [
+      "2026-11-23"
+    ],
+    "source_documents": [
+      1
+    ]
+  },
+  {
+    "id": "valid",
+    "rule": "expiry_date",
+    "outcome": "valid",
+    "docs": [
+      "Insurance certificate\nExpiry date: 2027-06-01"
+    ],
+    "rules": [
+      {
+        "category": "insurance",
+        "expiry": true
+      }
+    ],
+    "values": [
+      "2027-06-01"
+    ],
+    "source_documents": [
+      1
+    ]
+  },
+  {
+    "id": "expires_today",
+    "rule": "expiry_date",
+    "outcome": "approaching",
+    "docs": [
+      "Insurance certificate\nExpiry date: 2026-11-24"
+    ],
+    "rules": [
+      {
+        "category": "insurance",
+        "expiry": true
+      }
+    ],
+    "values": [
+      "2026-11-24"
+    ],
+    "source_documents": [
+      1
+    ]
+  },
+  {
+    "id": "ambiguous",
+    "rule": "expiry_date",
+    "outcome": "ambiguous",
+    "docs": [
+      "Insurance certificate\nExpiry date: 03/04/2026"
+    ],
+    "rules": [
+      {
+        "category": "insurance",
+        "expiry": true
+      }
+    ],
+    "values": [
+      "03/04/2026"
+    ],
+    "source_documents": [
+      1
+    ]
+  },
+  {
+    "id": "invalid",
+    "rule": "expiry_date",
+    "outcome": "unreadable",
+    "docs": [
+      "Insurance certificate\nExpiry date: 2026-13-99"
+    ],
+    "rules": [
+      {
+        "category": "insurance",
+        "expiry": true
+      }
+    ],
+    "values": [
+      "2026-13-99"
+    ],
+    "source_documents": [
+      1
+    ]
+  },
+  {
+    "id": "missing_date",
+    "rule": "expiry_date",
+    "outcome": "missing_field",
+    "docs": [
+      "Insurance certificate\nPolicy number: DEMO"
+    ],
+    "rules": [
+      {
+        "category": "insurance",
+        "expiry": true
+      }
+    ],
+    "values": []
+  },
+  {
+    "id": "absent",
+    "rule": "requirement",
+    "outcome": "missing_document",
+    "docs": [],
+    "rules": [
+      {
+        "category": "registration"
+      }
+    ]
+  },
+  {
+    "id": "received",
+    "rule": "requirement",
+    "outcome": "received",
+    "docs": [
+      "Company registration certificate\nLegal name: Oak"
+    ],
+    "rules": [
+      {
+        "category": "registration"
+      }
+    ]
+  },
+  {
+    "id": "unclassified",
+    "rule": "requirement",
+    "outcome": "unconfirmed",
+    "docs": [
+      "Inventory"
+    ],
+    "rules": [
+      {
+        "category": "registration"
+      }
+    ]
+  },
+  {
+    "id": "failed",
+    "rule": "requirement",
+    "outcome": "unconfirmed",
+    "docs": [
+      "FAILED"
+    ],
+    "rules": [
+      {
+        "category": "registration"
+      }
+    ]
+  },
+  {
+    "id": "unknown_condition",
+    "rule": "requirement",
+    "outcome": "unknown_condition",
+    "docs": [],
+    "rules": [
+      {
+        "category": "tax",
+        "when_type": "importer"
+      }
+    ]
+  },
+  {
+    "id": "not_applicable",
+    "rule": "requirement",
+    "outcome": "not_applicable",
+    "docs": [],
+    "type": "local",
+    "rules": [
+      {
+        "category": "tax",
+        "when_type": "importer"
+      }
+    ]
+  },
+  {
+    "id": "unknown_class",
+    "rule": "classification",
+    "outcome": "insufficient",
+    "docs": [
+      "Unrecognized sheet"
+    ]
+  },
+  {
+    "id": "class_supported",
+    "rule": "classification",
+    "outcome": "none",
+    "docs": [
+      "Company registration certificate\nLegal name: Oak"
+    ]
+  },
+  {
+    "id": "tampered_span",
+    "rule": "extraction",
+    "outcome": "insufficient",
+    "docs": [
+      "Company registration certificate\nLegal name: Oak"
+    ],
+    "tamper": true
+  },
+  {
+    "id": "intact",
+    "rule": "extraction",
+    "outcome": "none",
+    "docs": [
+      "Company registration certificate\nLegal name: Oak"
+    ]
+  },
+  {
+    "id": "competing",
+    "rule": "within_document",
+    "outcome": "conflict",
+    "docs": [
+      "Company registration certificate\nLegal name: Oak\nLegal name: Elm"
+    ],
+    "values": [
+      "Oak",
+      "Elm"
+    ],
+    "source_documents": [
+      1,
+      1
+    ]
+  },
+  {
+    "id": "singleton",
+    "rule": "within_document",
+    "outcome": "none",
+    "docs": [
+      "Company registration certificate\nLegal name: Oak"
+    ]
+  },
+  {
+    "id": "bad_page",
+    "rule": "page_quality",
+    "outcome": "insufficient",
+    "docs": [
+      "Company registration certificate\nLegal name: Oak"
+    ],
+    "warning": true
+  },
+  {
+    "id": "clear_page",
+    "rule": "page_quality",
+    "outcome": "none",
+    "docs": [
+      "Company registration certificate\nLegal name: Oak"
+    ]
+  },
+  {
+    "id": "none_comparable",
+    "rule": "comparison",
+    "outcome": "insufficient",
+    "docs": [
+      "Company registration certificate\nLegal name: Oak"
+    ]
+  },
+  {
+    "id": "two_comparable",
+    "rule": "comparison",
+    "outcome": "none",
+    "docs": [
+      "Company registration certificate\nLegal name: Oak",
+      "Tax registration document\nRegistered business name: Oak"
+    ]
+  },
+  {
+    "id": "future_issue",
+    "rule": "issue_date",
+    "outcome": "conflict",
+    "docs": [
+      "Tax registration document\nIssue date: 2027-01-01"
+    ],
+    "values": [
+      "2027-01-01"
+    ],
+    "rules": [
+      {
+        "category": "tax",
+        "issue_date": true
+      }
+    ],
+    "source_documents": [
+      1
+    ]
+  },
+  {
+    "id": "current_issue",
+    "rule": "issue_date",
+    "outcome": "valid",
+    "docs": [
+      "Tax registration document\nIssue date: 2026-11-24"
+    ],
+    "values": [
+      "2026-11-24"
+    ],
+    "rules": [
+      {
+        "category": "tax",
+        "issue_date": true
+      }
+    ],
+    "source_documents": [
+      1
+    ]
+  },
+  {
+    "id": "date_order_bad",
+    "rule": "date_order",
+    "outcome": "conflict",
+    "docs": [
+      "Insurance certificate\nCoverage start: 2026-06-01\nExpiry date: 2026-01-01"
+    ],
+    "rules": [
+      {
+        "category": "insurance",
+        "expiry": true
+      }
+    ],
+    "values": [
+      "2026-06-01",
+      "2026-01-01"
+    ],
+    "source_documents": [
+      1,
+      1
+    ]
+  },
+  {
+    "id": "date_order_ok",
+    "rule": "date_order",
+    "outcome": "none",
+    "docs": [
+      "Insurance certificate\nCoverage start: 2026-06-01\nExpiry date: 2027-01-01"
+    ],
+    "rules": [
+      {
+        "category": "insurance",
+        "expiry": true
+      }
+    ],
+    "values": []
+  }
+]

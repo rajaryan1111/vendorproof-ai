@@ -1,6 +1,6 @@
 # VendorProof AI Test Plan
 
-**Status:** Milestone 1 tests exercise health, request IDs, allowed and denied origins, safe 404 responses, and dashboard loading, failure and retry. Later acceptance tests remain planned.
+**Status:** Milestone 1 tests exercise health, request IDs, allowed and denied origins, safe 404 responses, and dashboard loading, failure and retry. Phase 1 and Phase 2 acceptance tests now run locally.
 
 ## Executable Phase 1 gate
 
@@ -50,3 +50,7 @@ Run the README quality commands. Pytest covers API and SQL transactions through 
 ## CI gate
 
 GitHub Actions should install from pinned/locked project dependencies, run backend and frontend tests, lint and type checks, validate migrations, and scan dependencies/secrets using chosen maintained tools. CI must fail on errors; do not suppress failures. Select concrete commands when project configuration is introduced in Phase 1. No CI workflow exists yet.
+
+## Phase 2 quality gate
+
+Run the backend suite with Tesseract English data, Chrome and a disposable migrated PostgreSQL database as described in README. Include evaluation/ in Python lint, compile and format checks. The suite checks corpus extraction, real OCR, malformed files, source integrity, provider errors, uncertainty, prompt-like content, exact report permissions, repeated requests, history preservation, lease recovery and cross-tenant rejection. Browser acceptance uploads a synthetic scan, runs the local worker, opens the report and checks classification before the Phase 1 persistence and logout assertions. Vitest covers literal rendering of untrusted evidence. Rerun evaluation.v1.measure to compare CER, WER, classification, abstentions and provenance against the versioned results.

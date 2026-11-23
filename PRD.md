@@ -87,3 +87,7 @@ Initial product measures to instrument only after privacy review: supplier onboa
 - **Risk:** malware, malformed files, and parser vulnerabilities; uploads are untrusted and need defense in depth.
 - **Risk:** customer requirements and applicable privacy rules are unknown; retention and legal obligations require deployment-specific review.
 - **Risk:** no validated customer research or production workload is available in this repository.
+
+## Phase 2 delivery
+
+FR-004 now delivers local extraction reports for supported English labels in registration, tax, banking, insurance and agreement PDFs. Unknown documents retain reviewable page evidence. Each report is attached to one immutable version. Human reviewers retain authority. Cross-document findings and review decisions remain future work.

@@ -28,6 +28,8 @@ Milestones: (1) repository configuration and backend/frontend foundations; (2) P
 
 ## PHASE 2 — Document intelligence
 
+Complete on feat/phase-2-document-intelligence. The baseline supports local text/OCR extraction, provenance, retry history, restricted review, and synthetic evaluation. See MEMORY.md for release evidence.
+
 - **Objective:** extract typed, reviewable candidate information from supported documents.
 - **Scope:** PyMuPDF text extraction, Tesseract OCR for scans, versioned schemas, document classification, provenance, validation, processing state, extraction evaluation.
 - **Dependencies:** Phase 1 secure document lifecycle.

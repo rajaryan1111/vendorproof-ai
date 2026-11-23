@@ -71,3 +71,13 @@ Record decisions that materially constrain architecture, security, data handling
 - **Reasoning** Server-side sessions support immediate revocation and tenant-scoped download checks.
 - **Consequences** Authentication requires PostgreSQL. Reviewers can inspect metadata. Raw files need administrator access until finer permissions exist.
 - **Status** Accepted for Phase 1.
+
+## ADR-008 — Local PostgreSQL queue and immutable JSON reports
+
+- Date: 2026-11-24
+- Context: OCR needs independent timeouts and durable progress across web requests.
+- Decision: Use a local CLI worker, PostgreSQL row claims and one validated JSON report per attempt. Keep the extractor offline.
+- Alternatives: Synchronous HTTP processing; a separate message broker; hosted document AI.
+- Reasoning: PostgreSQL is already required. Reports are read by immutable version and attempt, so additional per-field tables provide little benefit at this phase.
+- Consequences: Operators run a worker alongside the API. Reprocessing retains earlier results. Cross-report analysis may later justify separate indexed fields.
+- Status: Accepted.

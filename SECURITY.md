@@ -36,3 +36,9 @@ Use SQLAlchemy parameterized operations, Alembic-tracked schema changes, generat
 ## Security verification and operations
 
 Use the security tests listed in TEST_PLAN.md, dependency updates/scanning, secret scanning, and review of migration/storage permission changes. Before production, complete a deployment threat model, provider/data-sharing review, incident contacts and response process, backup restore exercise, access review, and retention/deletion validation. This plan does not assert that these controls are implemented or audited.
+
+## Phase 2 processing boundary
+
+Only administrator report responses contain raw text, OCR output and candidate values. Reviewer summaries allowlist schema keys, validation states, page numbers and engine-generated warnings. Other members can see attempt status, category and counts. Store derived reports with the same restricted classification as PDF originals. Render evidence as React text.
+
+The worker reads generated private paths, verifies SHA-256 and starts a separate parser process with an environment allowlist. Limits include 40 pages, 200,000 extracted characters, a 2,200-pixel longest rendered edge, 15 seconds per OCR call, and 100 seconds per job. Linux also sets a 1 GiB address-space ceiling. The parser process shares the worker's OS user permissions. Production deployment requires stronger isolation, storage encryption and malware controls. No malware scanner or external model endpoint is configured.

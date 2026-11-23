@@ -50,3 +50,7 @@ Use consistent buttons, labeled form fields, status badges with text, tables wit
 ## Responsive and accessible behavior
 
 At desktop sizes, support a two-pane verification workspace. At tablet/mobile widths, stack the document and findings panes with clear navigation between them. Tables may become labeled cards or scroll within their own region. Preserve keyboard order and focus on dialogs; use `aria-live` for asynchronous upload/processing updates. Provide text alternatives for all status icons and visible focus styling.
+
+## Processing on supplier detail
+
+Each PDF displays its current stage and numbered attempts. Poll queued/processing attempts and expose a safe failure code with a retry action for authorized writers. Successful extraction has a needs-review state. Administrators can inspect raw evidence by page and method. Reviewers see validation statuses and source page locations. The dashboard counts active document versions whose latest extraction needs review. Raw engine confidence, when available, describes OCR recognition only.

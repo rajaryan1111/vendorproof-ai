@@ -24,6 +24,14 @@ Native PostgreSQL 16 started on a private socket. Alembic upgraded a genuinely e
 
 The local private store uses generated UUID paths and owner-only file permissions. PDF validation checks type, extension, size, signature and parseable structure. Stored means uploaded. Malware scanning, physical purge, crash orphan reconciliation, deployment encryption and backup/restore remain operational work. Local HTTP requires the explicit secure-cookie override in the example. TestClient emits a deprecation warning for its HTTPX transport. Tests use only synthetic workspaces and files.
 
-## Next phase
+## Phase 2 release
 
-Phase 2, document intelligence. Begin with local PDF text extraction against versioned synthetic fixtures, page-level provenance, validation and explicit failure states. Read MODEL_PLAN.md and PHASES.md before changing the processing contract.
+Branch `feat/phase-2-document-intelligence` starts at verified Phase 1 SHA `418a8a1236b8233ecf96a37383a5ad2a29233de2`. Migration 002_processing retains previous document records and creates tenant-linked processing_attempts. A local worker claims queued versions, verifies the digest, runs bounded PyMuPDF/Tesseract extraction and saves immutable fields/1 reports with local/1 implementation metadata. Its statuses, source references, failure codes and retry behavior are documented in ARCHITECTURE.md. Administrator reports and reviewer-safe metadata are accessible from supplier detail.
+
+Full integrated release gate: 19 pytest cases passed, including real OCR, old-schema upgrade, retry and interruption recovery, schema/provenance checks, role and tenant isolation, and the Chrome workflow opening a scanned PDF extraction. Two Vitest cases passed. Production build, TypeScript, ESLint, Python compile, Ruff lint and formatting passed. Both package audits reported no known vulnerabilities. Upstream Starlette/PyMuPDF deprecations and Vite bundling notices remain. The worker runs on POSIX and requires local Tesseract language data.
+
+Synthetic-v1: 11 PDFs, 13 pages, 3 scored scan pages. All 12 nonempty pages yielded text, both unknown documents remained unknown, and one degraded insurance scan was misclassified as unknown. CER 10.63%, WER 36%, exact positive-field matches 14/17, normalized 15/17, strict source localization 14/17. No external calls. The committed results JSON records the confusion matrix, field counts, abstention, timings and allocation measurements. The small synthetic templates and weak degraded-scan results limit generalization.
+
+## Exact next phase
+
+Phase 3, verification intelligence. Use the versioned Phase 2 candidate and evidence contract when designing deterministic cross-document comparison. Begin only under separate authorization.

@@ -1,6 +1,6 @@
 # VendorProof AI Model and Document Intelligence Plan
 
-**Status:** Planned for Phase 2 onward. Phase 0 and Phase 1 contain no AI extraction capability.
+**Status:** Phase 2 ships a deterministic offline extractor. Comparison and resolution are later roadmap items.
 
 Phase 1 labels a validated PDF as stored. This status records successful intake only.
 
@@ -41,3 +41,13 @@ Create a synthetic, versioned evaluation corpus and, only with governance approv
 ## Safety, operations, and cost
 
 Treat document text as untrusted data, never as instructions. Keep extraction versions and rule versions so results can be reproduced. Track processing state and bounded errors without logging document contents. Establish latency/cost budgets using measured workload before selecting a provider. Keep provider adapters replaceable; do not add RAG, embeddings, vector databases, fine-tuning, or multi-agent orchestration absent a demonstrated requirement.
+
+## Implemented report and evaluation
+
+PyMuPDF reads each page in reading order. Tesseract processes sparse or garbled pages and up to four substantial image regions on mixed pages. OCR retains line confidence (the arithmetic mean of the Tesseract word scores) and bounding rectangles in rendered-page points. Each candidate cites a page, segment and half-open Unicode character range. The format does not reconstruct arbitrary tables or infer a handwritten signature. Signature evidence means a labeled textual statement only.
+
+Version fields/1 defines common and class-specific keys. A single recognized heading suggests the class. Absent or competing headings yield unknown. Labeled values remain candidates, competing values retain separate evidence, and invalid dates retain the original with null normalization. Account numbers are omitted from the field catalog. Page evidence can still contain them. The offline provider interface has no network implementation, API keys or token charges. A bounded child process validates schema and provenance before publication.
+
+The synthetic-v1 corpus holds reference page transcripts, rendering instructions and expected values, with an independent slot manifest. The evaluation generates PDF bytes in memory. CER and WER use edit distance on whitespace-collapsed scanned-page transcripts. Field exact and whitespace-normalized matches use the 17 labeled values as denominator. Localization requires the reference page, exact value and matching source slice. Missing-value precision/recall treat conflicts as a separate state. Abstention counts null predictions across all expected slots. The confusion matrix uses truth rows and predicted columns. Runtime measures local parser and extraction calls, excluding PDF generation, worker startup, database and UI. Peak memory counts Python allocations only; native parser and OCR process RSS are excluded.
+
+See backend/evaluation/v1/results.json for per-field counts, all six classification rows and denominators. The corpus uses few synthetic templates in English, with a single degraded scan. These measurements exercise the implementation and cannot establish production accuracy.

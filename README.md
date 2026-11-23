@@ -32,6 +32,20 @@ npm run dev
 
 Open http://localhost:5173 and sign in with the workspace name, email and password. Use the same hostname for the API and web app so the strict same-site cookie works. Configure exact allowed origins with `VP_CORS_ORIGINS` and the browser-visible API prefix with `VITE_API_BASE_URL`. Liveness is available at `/api/v1/health` and database connectivity at `/api/v1/health/db`.
 
+## Process supplier PDFs locally
+
+Install Tesseract 5 and the trained data for your selected language. On macOS, use `brew install tesseract`. On Debian/Ubuntu, install `tesseract-ocr` and the appropriate language package. Check `tesseract --list-langs` for `eng` or set `VP_OCR_LANGUAGE` to an installed language. PyMuPDF is included in the backend lockfile. The worker uses local CPU and requires a POSIX environment (tested on macOS).
+
+From `backend/`, run `uv sync --locked` and `uv run alembic upgrade head`. Start a third terminal in that directory with the same database and private storage settings as the API:
+
+```sh
+uv run python -m app.intelligence.worker
+```
+
+Upload a PDF and open the supplier detail page. The worker claims queued attempts automatically. Existing Phase 1 documents show **Process PDF** until submitted. Administrators can open extraction reports when the state reaches **needs review**. Reviewers can inspect field statuses and page locations. Reprocess starts a new attempt and retains the previous result. For a single job, use `--once`. If the queue stays queued, check that the worker is running against the same database. For `ocr_unavailable` or `ocr_failed`, verify the worker's PATH and installed trained data, then reprocess.
+
+Run `uv run python -m evaluation.v1.measure` from `backend/` to generate the evaluation metrics from synthetic documents. See [recorded results](backend/evaluation/v1/results.json) and [measurement definitions](MODEL_PLAN.md).
+
 ## Quality checks
 
 Run `npm ci` in `frontend/` first. Create a separate disposable PostgreSQL database owned by the test role. Export `VP_TEST_DATABASE_URL` as its SQLAlchemy psycopg URL. The suite adds synthetic users and documents and runs migrations inside a generated schema. Local ports 55173 and 58001 must be free for the browser test.

@@ -38,3 +38,7 @@ Only PDFs up to 5 MiB are accepted. Bytes are stored under tenant and document U
 ## Backup and incident handling
 
 Production backups must be encrypted, access-restricted, monitored, and periodically restore-tested; define recovery targets before launch. Suspected disclosure or loss triggers the organization's incident process, provider review, access containment, evidence preservation, and applicable notification assessment. No incident-response SLA is claimed here.
+
+## Derived page text and candidates
+
+Processing persists full page text, OCR boxes and scores, source slices and candidate values in PostgreSQL. Treat the entire report as restricted, including its backups. Archiving a document disables API access to all attempts but retains stored results. A tenant purge must cover processing_attempts alongside document bytes, supplier metadata and backups. Evaluate only generated synthetic PDFs. Worker stderr and parser text do not enter request logs.

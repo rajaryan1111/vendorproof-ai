@@ -1,6 +1,6 @@
 # VendorProof AI Architecture
 
-**Status:** Phase 1 implements the React workspace, authenticated API, PostgreSQL schema and private local PDF store. Processing and verification remain planned. Local development runs PostgreSQL, Uvicorn and Vite. Material alternatives remain open until a working milestone validates them.
+**Status:** Phase 1 implements the React workspace, authenticated API, PostgreSQL schema and private local PDF store. Phase 2 adds local document extraction. Cross-document verification is planned for Phase 3. Local development runs PostgreSQL, Uvicorn and Vite. Material alternatives remain open until a working milestone validates them.
 
 ## System shape
 
@@ -68,3 +68,11 @@ Audit consequential actions (identity/role changes, supplier updates, upload/rep
 ## Deployment and integrations
 
 Verified local development uses native PostgreSQL 16 and documented app commands; deployment topology is undecided. Production requires TLS, managed secret injection, private durable storage, backups, migration discipline, monitoring, and a malware-scanning integration boundary. External OCR/model, email, identity, and storage services sit behind adapters; no API key or service availability is assumed. See DATA_POLICY.md and SECURITY.md.
+
+## Local processing contract (implemented)
+
+Alembic 002_processing adds one table with a composite foreign key to the existing tenant, supplier and immutable document UUID. New uploads insert attempt 1 in the upload transaction. Older versions can be queued on demand. The row holds versioned structured JSON, claim/finish times and a bounded error code. All report sources inherit the report's document UUID, SHA-256, schema and engine version. A replacement PDF gets a new UUID.
+
+The worker claims a row with FOR UPDATE SKIP LOCKED, commits the claim, runs the parser outside the database transaction and publishes once using a conditional update. Allowed transitions are uploaded → queued → processing → needs_review or failed. A worker marks processing attempts older than three minutes failed. Operators and administrators retry manually, up to ten attempts per document. Supplying the last attempt UUID as the reprocessing precondition makes duplicate requests idempotent. No automatic retries consume CPU after bad input.
+
+Under /api/v1/suppliers/{sid}/documents/{key}/processing, GET lists attempt history and POST queues work. POST ?after={last-id} requests another attempt. GET /{attempt-id} returns administrator evidence. GET /{attempt-id}?summary=true returns a reviewer-safe field and page summary. The API checks the document tenant, supplier and archival state before accessing reports.

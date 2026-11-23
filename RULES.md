@@ -20,3 +20,5 @@ This file is authoritative for project engineering. When a change conflicts with
 16. Work one roadmap phase at a time. Phase 0 documentation must be completed and reviewed before Phase 1 implementation.
 17. Use a disposable PostgreSQL database and synthetic PDFs for integration gates.
 18. Never use destructive Git operations or force-push without explicit authorization. Use meaningful commits and verify any push.
+
+19. Keep extraction attempts versioned and immutable after completion. Validate provenance against the captured source segment and run the synthetic evaluation when changing the extractor.

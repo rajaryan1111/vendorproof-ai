@@ -3,7 +3,6 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Category = Literal["registration", "tax", "bank", "insurance", "agreement"]
-Tag = str
 
 
 class Rule(BaseModel):
@@ -28,6 +27,15 @@ class Policy(BaseModel):
     def distinct(self):
         if len(self.rules) != len({r.category for r in self.rules}):
             raise ValueError("duplicate category")
+        if any(
+            rule.category == "registration"
+            and rule.expiry
+            and not rule.when_jurisdiction
+            for rule in self.rules
+        ):
+            raise ValueError(
+                "Registration expiry requires a jurisdiction-specific rule"
+            )
         return self
 
     def applies(self, rule):

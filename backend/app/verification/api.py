@@ -293,3 +293,50 @@ def review(
             reason=body.reason,
         ).one()
     )
+
+
+@router.get("/findings/{fid}/sources/{index}")
+def inspect_source(
+    sid: UUID,
+    fid: UUID,
+    index: int,
+    user=Depends(identity, scope="function"),
+    conn=Depends(db, scope="function"),
+):
+    """Resolve an exact archived-run citation against a currently accessible original."""
+    params = scope(user, sid)
+    f = query(
+        conn,
+        "SELECT evidence FROM verification_findings WHERE id=:fid AND organization_id=:tenant AND supplier_id=:sid",
+        fid=fid,
+        **params,
+    ).first()
+    if not f or not 0 <= index < len(f.evidence):
+        raise HTTPException(404)
+    if user.role != "admin":
+        raise HTTPException(403)
+    ref = f.evidence[index]
+    if "segment" not in ref:
+        raise HTTPException(404)
+    row = query(
+        conn,
+        """SELECT j.report FROM processing_attempts j JOIN documents d ON d.id=j.document_id AND d.organization_id=j.organization_id
+    WHERE j.organization_id=:tenant AND j.supplier_id=:sid AND j.id=:attempt AND d.id=:doc AND d.digest=:digest AND NOT d.archived""",
+        **params,
+        attempt=ref["attempt"],
+        doc=ref["document"],
+        digest=ref["digest"],
+    ).first()
+    if not row:
+        raise HTTPException(404)
+    segment = row.report["pages"][ref["page"] - 1]["segments"][ref["segment"]]
+    excerpt = segment["text"][ref["start"] : ref["end"]]
+    if excerpt != ref["original"] or segment["method"] != ref["method"]:
+        raise HTTPException(409)
+    return {
+        "excerpt": safe(excerpt),
+        "page": ref["page"],
+        "method": segment["method"],
+        "bbox": segment["bbox"],
+        "digest": ref["digest"],
+    }

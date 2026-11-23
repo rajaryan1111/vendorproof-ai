@@ -8,7 +8,7 @@ from itertools import combinations
 from pydantic import ValidationError
 
 from ..intelligence.schema import Report
-from .normalize import address, calendar_date, company, identifier
+from .normalize import address, ambiguous_date, calendar_date, company, identifier
 
 VERSION = "verify/1"
 ALIASES = {
@@ -140,23 +140,30 @@ def inspect_document(doc, policy, as_of, groups):
     aliases = ALIASES if policy.legal_suffix_aliases else {}
     findings = []
     for page in report.pages:
-        if page.warning:
+        weak = page.segments and all(
+            seg.method == "ocr" and (seg.confidence or 0) < 90 for seg in page.segments
+        )
+        if page.warning or weak:
             findings.append(
                 finding(
                     "page_quality",
                     "insufficient",
-                    "Extraction flagged this page: " + page.warning,
+                    "Extraction flagged this page: "
+                    + (page.warning or "low OCR confidence"),
                     [{**doc.ref(), "page": page.number}],
                 )
             )
     for c in report.candidates:
         if c.status == "conflicting":
+            alternatives = [source(doc, c.key, r) for r in c.alternatives]
             findings.append(
                 finding(
                     "within_document",
-                    "conflict",
+                    "conflict"
+                    if all(r["method"] == "native" for r in alternatives)
+                    else "insufficient",
                     "The extraction contains competing values for one field.",
-                    [source(doc, c.key, r) for r in c.alternatives],
+                    alternatives,
                 )
             )
             continue
@@ -223,7 +230,7 @@ def validity(doc, rule, today, window):
         if not reliable(ref):
             outcome = "insufficient"
         elif parsed is None:
-            outcome = "ambiguous" if "/" in c.value else "unreadable"
+            outcome = "ambiguous" if ambiguous_date(c.value) else "unreadable"
         elif key == "issue_date":
             outcome = "conflict" if parsed > today else "valid"
         elif parsed < today:
@@ -242,7 +249,7 @@ def validity(doc, rule, today, window):
         )
     start = by_key.get("coverage_date") or by_key.get("issue_date")
     end = by_key.get("expiry_date")
-    if start and end and start.source and end.source:
+    if rule.expiry and start and end and start.source and end.source:
         dates = [calendar_date(c.value) for c in (start, end)]
         refs = [
             source(doc, c.key, c.source, d.isoformat() if d else None)
@@ -266,7 +273,18 @@ def evaluate(docs, policy, today):
     inventory = []
     for doc in docs:
         category, rows = inspect_document(doc, policy, today, groups)
-        inventory.append({**doc.ref(), "category": category})
+        inventory.append(
+            {
+                **doc.ref(),
+                "category": category,
+                "heading_locations": [
+                    ref.model_dump(exclude={"original"})
+                    for ref in doc.report.classification.evidence
+                ]
+                if doc.report
+                else [],
+            }
+        )
         results += rows
     for (kind, _namespace), refs in groups.items():
         for left, right in combinations(refs, 2):

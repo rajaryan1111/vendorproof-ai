@@ -18,11 +18,15 @@ def company(value, suffixes):
 
 
 def address(value):
-    text = spaces(value.replace(",", " "))
-    return re.sub(
-        r"\b(rd|st|ave)\.?(?= |$)",
-        lambda m: {"rd": "road", "st": "street", "ave": "avenue"}[m[1]],
-        text,
+    text = spaces(value)
+    return " ".join(
+        re.sub(
+            r"(?<= )\b(rd|st|ave)\.?(?=,|$)",
+            lambda m: {"rd": "road", "st": "street", "ave": "avenue"}[m[1]],
+            text,
+        )
+        .replace(",", " ")
+        .split()
     )
 
 
@@ -49,9 +53,17 @@ def calendar_date(value):
     m = re.fullmatch(r"(\d{1,2})/(\d{1,2})/(\d{4})", value)
     if m:
         a, b, y = map(int, m.groups())
-        if min(a, b) <= 12 < max(a, b):
+        if min(a, b) <= 12 < max(a, b) or a == b:
             try:
                 return date(y, min(a, b), max(a, b))
             except ValueError:
                 pass
     return None
+
+
+def ambiguous_date(value):
+    match = re.fullmatch(r"(\d{1,2})/(\d{1,2})/(\d{4})", value)
+    if not match:
+        return False
+    a, b, y = map(int, match.groups())
+    return y > 0 and 1 <= a <= 12 and 1 <= b <= 12 and a != b

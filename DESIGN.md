@@ -58,3 +58,9 @@ Each PDF displays its current stage and numbered attempts. Poll queued/processin
 ## Supplier verification workspace
 
 Administrators configure requirements on the supplier detail page. Each historical run shows its evaluation date and rule/policy versions. The checklist distinguishes received, missing, conditional, unconfirmed and inapplicable requirements. Side-by-side evidence identifies source versions, pages and spans. The administrator can open a cited span; a reviewer sees coordinates and outcomes. The page distinguishes no run, insufficient evidence and conflicts. A review action requires a reason and records an attributed history entry. Dashboard verification_pending counts review-required findings on the latest snapshots of active suppliers, excluding resolved and dismissed findings.
+
+## Exception queue and workspace
+
+Open **Exceptions** from the sidebar or **Open exception** on a supplier finding. Queue counts reflect applied filters. Age measures completed 24-hour periods since finding creation. Minimum age is a user-selected threshold. Older findings appear first within the chosen sort order. Historical and archived-supplier findings stay discoverable.
+
+The detail page shows the original outcome, explanation, recommended action and source locations. Ownership, draft revisions, corrected files, verification comparison and decision history share this page. Role and ownership determine the available controls. The editor previews approved wording and identifies invalid edits. Upload and decision forms require human confirmation. Refresh retrieves current processing and ownership information. History pages show up to 20 records per section.

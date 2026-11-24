@@ -2,7 +2,7 @@
 
 VendorProof AI is planned as a supplier-document verification workspace for procurement, finance, compliance, and operations teams. It aims to organize supplier documents, surface missing, expired, inconsistent, or uncertain information, and help people resolve findings using traceable evidence. AI will not decide fraud or approve suppliers.
 
-**Phase 1** provides workspace sign-in, a persisted dashboard, supplier search and lifecycle management, and private PDF intake with document version history.
+This branch includes workspace sign-in, private versioned PDFs, local extraction, evidence-backed verification and a human-reviewed exception queue.
 
 ## Run locally
 
@@ -83,3 +83,11 @@ Apply `uv run alembic upgrade head` from backend and start the existing API, Rea
 Choose **Run verification**. Review the dated inventory, checklist and source comparisons. Administrators can open cited spans. Reviewers can record an acknowledgement, clarification request, resolution or dismissal with a reason. Choose **Verification history** to inspect an earlier run. Changes to inputs take effect on the next run.
 
 Run `uv run python -m evaluation.verification_v1.measure` in backend to reproduce the synthetic verification evaluation. [Reference cases](backend/evaluation/verification_v1/cases.json) and [measured results](backend/evaluation/verification_v1/results.json) include the exact targeted outcomes and denominators.
+
+## Resolve an exception
+
+1. Apply `uv run alembic upgrade head` in `backend/`. Start the API, frontend and document worker as described above.
+2. Open **Exceptions** or choose **Open exception** from a supplier verification finding. An administrator selects the owner, enters a reason and records the assignment.
+3. As the assigned reviewer, filter **Ownership** to **mine**. Inspect the finding and evidence. Edit the draft using its approved subject and sentences, inspect the preview and choose **Save draft**. Saved revisions are internal.
+4. An administrator or operator chooses the document to replace (or adds supporting evidence), selects a corrected PDF and confirms the upload. Keep the existing worker running. Use **Refresh exception** to see completion or a processing failure.
+5. As the owner or an administrator, choose **Rerun and compare**. Inspect the original and current outcomes and citations. Select the next state, enter the reason and confirm the decision. A failed, stale or unsupported comparison blocks resolution. Review history shows who acted, when and on which evidence.

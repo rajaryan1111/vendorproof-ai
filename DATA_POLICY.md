@@ -46,3 +46,9 @@ Processing persists full page text, OCR boxes and scores, source slices and cand
 ## Verification records
 
 Treat stored original and normalized values, citations, policy context and review notes as confidential or restricted according to the source. Findings reference exact immutable document versions and extraction attempts. Missing-document evidence consists of the policy and frozen inventory. An absent document has no PDF snippet. Archiving an original restricts access to its historical raw values and source-span endpoint. Include all four verification tables and their backups in deployment retention and controlled purge procedures. Review reasons should describe actions taken and omit bank details or copied document text.
+
+## Resolution records
+
+Assignment and decision records retain workspace membership references, timestamps, reasons and state changes. Draft revisions retain subject, approved message text, author and time under their originating finding and supplier. Internal reasons and extracted values are excluded from draft generation. Reassignment transfers draft access to the current owner. Administrators retain access.
+
+Linked corrections retain the upload request ID, actor, immutable document version and SHA-256 provenance. Archived source bytes remain private. Historical metadata and saved text follow the existing workspace retention policy. Phase 4 introduces no purge schedule. Drafts have no delivery destination or external transport.

@@ -91,3 +91,11 @@ Record decisions that materially constrain architecture, security, data handling
 - Reasoning: Explicit scope supports conditional rules without assuming customer or legal requirements. Snapshots preserve the original review basis when documents change.
 - Consequences: Run verification again after a policy, date or document change. An older run remains available for inspection. The initial bounded engine runs locally.
 - Status: Accepted.
+
+## ADR-010 — Finding ownership and corrected evidence
+
+Accepted on 2026-11-24. Ownership, comparisons and decisions extend the existing Phase 3 review log. A SQL view keeps historical unresolved findings available when a successor run exists. Draft revisions and correction links have separate append-only records because editing a draft or uploading a file does not constitute a review decision.
+
+Open and assigned track initial ownership. Work can move to in progress, awaiting supplier response, or awaiting internal review. Awaiting supplier response requires a move back to active or internal review before resolution. Dismissal requires a reason. Resolved and dismissed findings can only move to reopened, with explicit justification. Reassignment during active review preserves its status.
+
+Supplier-facing editing uses approved subjects and composable sentences to keep raw evidence and internal notes out of messages. Reverification is an explicit action after processing. An unsupported or absent comparable outcome requires further investigation. Migration downgrade refuses to discard Phase 4 history or inactive membership state.

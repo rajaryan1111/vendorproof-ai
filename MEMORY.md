@@ -42,6 +42,16 @@ Release gates: 65 pytest cases, including PostgreSQL migration/rollback and the 
 
 Synthetic verification_v1: 41 target cases across 14 rule families. 24/24 expected review decisions and 17/17 negative decisions, 11/41 abstentions, 39/39 labeled value references localized, 52 review-required findings across all rules. No representative workload or customer accuracy baseline exists. Runs are manual, support at most 30 active PDF versions, and use configured namespaces and supported date formats. Upstream Starlette/PyMuPDF deprecations and React Router bundling notices remain.
 
+## Phase 4 release
+
+Branch `feat/phase-4-exception-resolution` starts at verified Phase 3 release `6c652592fb59a9e089bb9602d904cbfa0533e555`. Implementation commit `924042801dbd69d60bf2831f50b9658973293684`. Resolve the release commit with `git log -1 --format=%H --grep="^docs: record Phase 4 acceptance and handoff$"`. Migration 004 projects the exception queue from immutable findings and the existing review log. It adds active membership, assignment and comparison events, draft revisions, and idempotent correction-to-document links. The queue includes older unresolved snapshots. Assigned reviewers and administrators control drafts and decisions. Approved sentences keep internal notes and original values out of supplier-facing text. Drafts remain internal.
+
+The local API, React workspace and existing worker were exercised with synthetic PDFs and users. The Chrome workflow assigned a bank-holder discrepancy, saved two draft revisions, processed a corrected bank letter, compared cited evidence, recorded a human resolution, and verified audit and historical results after restart. A separate workspace was denied access.
+
+Release evidence on 2026-11-24: Python compilation and Ruff lint/format passed for the checked application, migrations, tests and evaluation code. Full pytest passed 72 cases, including Chrome, migration round trip, preservation of Phase 3 review data, blocked destructive downgrade, concurrent assignment, inactive session denial, failed extraction and retry. Nine Vitest tests, ESLint, TypeScript and the Vite production build passed. pip-audit and npm audit reported zero known vulnerabilities. Upstream Starlette/PyMuPDF deprecations and React Router bundler notices remain.
+
+Operational limits: verification runs retain the existing 30-active-document bound. Queue age uses elapsed days with a selectable threshold. A correction with no supported comparable result remains open for investigation or an explicitly justified dismissal. Downgrading a database with Phase 4 history requires an archival plan.
+
 ## Exact next phase
 
-Phase 4 — exception resolution. Begin with assignment and queue ownership for existing findings, followed by corrective-action suggestions and editable correction-request drafts under human control. Phase 3 stops with internal review and audit history.
+Phase 5 — production readiness. Scope includes deployment security, observability, backup and restore, retention and operational verification. Separate authorization is required.

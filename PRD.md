@@ -91,3 +91,7 @@ Initial product measures to instrument only after privacy review: supplier onboa
 ## Phase 2 delivery
 
 FR-004 now delivers local extraction reports for supported English labels in registration, tax, banking, insurance and agreement PDFs. Unknown documents retain reviewable page evidence. Each report is attached to one immutable version. Human reviewers retain authority. Phase 3 adds reproducible cross-document findings (FR-005), reasoned review actions (FR-006), and attributed history (FR-007). Expiry checks require an applicable policy. Missing means an unmet requirement in the recorded inventory, and unresolved classifications are reported separately.
+
+## Phase 4 exception resolution
+
+An administrator can assign a review-required finding to an active reviewer or administrator in its workspace. Members can find work by supplier, severity, owner, status and time open. Each exception retains its original verification run. The owner can prepare a correction request, review a corrected document against the original finding and record a reasoned decision. Procurement can continue to see outstanding findings from earlier runs.

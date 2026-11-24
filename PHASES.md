@@ -52,6 +52,8 @@ Complete on feat/phase-3-verification-intelligence. The verified baseline includ
 
 ## PHASE 4 — Exception resolution
 
+Complete on `feat/phase-4-exception-resolution`. PostgreSQL migration, isolation, immutable audit, and Chrome acceptance passed against the verified Phase 3 baseline. The release evidence is recorded in MEMORY.md.
+
 - **Objective:** let authorized people resolve findings with a clear, auditable workflow.
 - **Scope:** exception queues, corrective-action suggestions, correction-request drafts, assignment, review actions, approval history, corrected-document reprocessing.
 - **Dependencies:** Phase 3 findings and stable audit/identity model.

@@ -59,3 +59,7 @@ verify/1 revalidates the fields/1 report, document UUID, SHA-256 and source offs
 Unambiguous ISO dates, English day-month-name dates and slash dates with one valid interpretation use calendar dates. Expiry is inclusive through the stated date in UTC. A positive warning window includes the last day and the configured threshold. Zero disables approaching-expiry alerts. Registration expiry requires a jurisdiction-specific policy; its current extraction schema may lack an expiry candidate. Distinct incorporation dates, future issue dates and starts after expiry can raise review findings.
 
 Unsupported source data, failed processing and uncertain classifications produce abstentions. An OCR score below 90 cannot establish a comparable candidate, and a cross-document difference involving OCR requires source inspection. This threshold is an engineering heuristic. Severity is a triage label. No verification rule uses a model or a probability of fraud.
+
+## Correction guidance
+
+Guidance is a local deterministic mapping from the historical rule, outcome and recognized requirement category. Users see the original rule explanation alongside the requested action. An expired date, a missing agreement and a name discrepancy produce different instructions. Insufficient extraction requests clarification or a clearer copy. Draft wording draws only from controlled sentences and subjects. This stage performs no inference on supplier text and makes no provider calls.

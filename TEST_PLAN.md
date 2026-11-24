@@ -81,3 +81,9 @@ verification_v1 labels one target rule and outcome per synthetic case. Positive 
 | date_order | 1/1 | 1/1 | 100% | 100% |
 
 All 41 exact target outcomes matched. FP 0/17, FN 0/24. The 11 intended abstentions count as targeted review decisions. All 39 value references matched the labeled document, digest, attempt, page and exact source slice. Evaluation generated 52 review-required findings across all rules; that count includes secondary findings outside the targeted label. Recorded execution time is available in the results JSON.
+
+## Phase 4 resolution regression
+
+`tests/test_resolution.py` exercises tenant and role boundaries, concurrent assignment, reassignment, inactive sessions, stable queue pagination, archival, immutable history, draft revisions and allowed text, stale decisions and legacy-route protection. Correction tests exercise request replay, invalid bytes, hash mismatch in the worker, corrected replacement, comparison reuse and explicit sign-off. Migration tests carry a real legacy review across revision 004 and exercise safe downgrade and refusal to discard new membership state.
+
+`Exceptions.test.tsx` covers queue filters and ordering, assignment, confirmed decisions, editing and preview, role-aware forms, linked upload requests and error feedback. Chrome acceptance assigns a bank-holder conflict, saves and edits a draft, replaces the cited synthetic bank PDF, runs the worker, compares the successor run and records a human resolution. It checks access from a second workspace, archived evidence and persistence after restarting the API and frontend.

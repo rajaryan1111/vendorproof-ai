@@ -8,11 +8,13 @@ export const config = {
   installCommand: "npm ci",
   buildCommand: "npm run build",
   outputDirectory: "dist",
+  redirects: [{ source: "/", destination: "/demo", permanent: false }],
   rewrites: [
     ...(origin
       ? [{ source: "/api/:path*", destination: origin + "/api/:path*" }]
       : []),
     ...[
+      "/demo",
       "/login",
       "/logout",
       "/suppliers/:path*",

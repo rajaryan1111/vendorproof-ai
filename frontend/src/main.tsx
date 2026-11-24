@@ -21,8 +21,10 @@ import {
 } from "./workspace";
 import { Organization, changeAccess } from "./Organization";
 import { Queue, ExceptionDetail } from "./Exceptions";
+import { PublicDemo } from "./PublicDemo";
 import "./style.css";
 const router = createBrowserRouter([
+  { path: "/demo", Component: PublicDemo },
   {
     path: "/login",
     Component: Login,

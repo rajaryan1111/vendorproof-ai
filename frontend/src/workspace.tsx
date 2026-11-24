@@ -141,6 +141,7 @@ function HostedAvailability({ parserReady }: { parserReady: boolean }) {
           >
             Check again
           </button>
+          <Link to="/demo">Explore public demo</Link>
           <a href="https://github.com/rajaryan1111/vendorproof-ai/blob/feat/final-deployment-and-product-polish/README.md#run-locally">
             Local setup guide
           </a>

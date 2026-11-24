@@ -4,6 +4,10 @@ This ₹0 deployment uses the existing Vercel Hobby frontend and a single Render
 
 The hosted API registers only the public health diagnostic. It has no sessions, tenant database, document store, ClamAV service or OCR worker. Workspace requests return 503. The frontend exposes no credential or upload form in this mode. A successful parser probe alone never enables supplier operations. Run the [local application](../README.md#run-locally) for the complete private workflow.
 
+## Public demo
+
+Vercel redirects the public homepage to [Public Demo Mode](https://vendorproof-ai-frontend.vercel.app/demo). Share any example using its URL, such as [Conflicting names](https://vendorproof-ai-frontend.vercel.app/demo?case=conflict). The read-only route renders synthetic text excerpts and prewritten examples. It works without Render or a connection to the local workspace. The existing same-origin Render health check is available from the hosted service status page at `/login`. Neither route accepts credentials or PDFs on the free deployment.
+
 ## Verified personal deployment
 
 On November 24, 2026, Render and Vercel deployed application commit `1bf030d63914958327fa9295d4d50c0302eb42f3` on free plans. The [frontend](https://vendorproof-ai-frontend.vercel.app) and [Render diagnostic](https://vendorproof-runtime-check.onrender.com/api/v1/health) use provider-issued HTTPS. Vercel forwarded the diagnostic response with `parser_probe_passed: false`. The database check through the frontend returned 503 with private, no-store caching. Direct Render sign-in also returned 503. No private database, worker or PDF storage was created on these services. Chrome verified the offline view and connection retry. Workflow and restore evidence in MEMORY.md comes from the disposable local environment.

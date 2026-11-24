@@ -482,3 +482,17 @@ form button[name="action"][value="remove"] {
   color: white;
   background: var(--color-accent);
 }
+
+.public-demo .demo-preview {
+  margin-top: 1.25rem;
+}
+.demo-preview figcaption {
+  margin-bottom: 0.75rem;
+}
+.demo-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+}

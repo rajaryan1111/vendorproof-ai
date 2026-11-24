@@ -13,6 +13,7 @@ from starlette.concurrency import run_in_threadpool
 from .auth import identity, writer
 from .db import db, query
 from .intelligence.jobs import enqueue
+from .resolution.service import validate_upload
 from .suppliers import event, lookup
 
 router = APIRouter(prefix="/api/v1/suppliers/{sid}/documents")
@@ -84,6 +85,8 @@ async def upload(
     sid: UUID,
     request: Request,
     replaces: UUID | None = None,
+    finding_id: UUID | None = None,
+    request_id: UUID | None = None,
     x_filename: str = Header(max_length=160),
     user=Depends(writer, scope="function"),
     conn=Depends(db, scope="function"),
@@ -103,6 +106,13 @@ async def upload(
     await run_in_threadpool(validate_pdf, data)
     if lookup(conn, user, sid, True).archived:
         raise HTTPException(409)
+    digest = hashlib.sha256(data).hexdigest()
+    if finding_id or request_id:
+        duplicate = validate_upload(
+            conn, user, sid, finding_id, request_id, replaces, digest
+        )
+        if duplicate:
+            return {"id": duplicate, "status": "stored"}
     if replaces:
         document(conn, user, sid, replaces)
         query(
@@ -120,9 +130,21 @@ async def upload(
         sid=sid,
         name=x_filename,
         size=len(data),
-        digest=hashlib.sha256(data).hexdigest(),
+        digest=digest,
         replaces=replaces,
     )
+    if finding_id:
+        query(
+            conn,
+            """INSERT INTO exception_corrections(organization_id,supplier_id,finding_id,request_id,document_id,actor)
+        VALUES(:tenant,:sid,:fid,:request,:doc,:actor)""",
+            tenant=user.tenant,
+            sid=sid,
+            fid=finding_id,
+            request=request_id,
+            doc=key,
+            actor=user.actor,
+        )
     event(conn, user, sid, "Replaced document" if replaces else "Uploaded document")
     PrivateFiles(request.app.state.settings.storage_root).put(user.tenant, key, data)
     enqueue(conn, user.tenant, sid, key)

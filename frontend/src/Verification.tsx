@@ -57,6 +57,7 @@ type Finding = {
   requires_review: boolean;
   status: string;
   evidence: Ref[];
+  managed?: boolean;
   history: Event[];
 };
 type Result = Run & {
@@ -441,6 +442,7 @@ export function Verification({
               <p>
                 {f.severity} severity · {label(f.status)}
               </p>
+              {f.requires_review && <a href={"/exceptions/"+f.id}>Open exception</a>}
               <p>{f.explanation}</p>
               <Evidence
                 refs={f.evidence}
@@ -455,7 +457,7 @@ export function Verification({
               {selected &&
                 !archived &&
                 ["admin", "reviewer"].includes(role) &&
-                f.requires_review &&
+                !f.managed && f.requires_review &&
                 !["resolved", "dismissed"].includes(f.status) && (
                   <form onSubmit={(e) => void review(e, f)}>
                     <label>

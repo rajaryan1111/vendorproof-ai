@@ -128,6 +128,7 @@ export function Shell() {
           <NavLink to="/" end>
             Dashboard
           </NavLink>
+          <NavLink to="/exceptions">Exceptions</NavLink>
           <NavLink to="/suppliers">Suppliers</NavLink>
         </nav>
       </aside>

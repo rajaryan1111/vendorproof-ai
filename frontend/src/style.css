@@ -12,3 +12,8 @@ main a{color:#334e9a;text-decoration:underline}table{width:100%;text-align:left}
 nav a{margin:.3rem}nav a.active{background:#476782}footer{margin-top:1rem}.login{grid-column:1/-1;max-width:36rem;width:100%;margin:8vh auto}button{padding:.5rem}.filters{align-items:end}section p[role=alert]{color:#a33434}
 
 .vp-comparison{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr));gap:.8rem}.vp-comparison>div,.vp-finding,fieldset{border:1px solid #ccd4de;padding:1rem;margin:.75rem 0;border-radius:6px;overflow-wrap:anywhere}.vp-finding h4,legend{font-weight:650}.vp-finding details,summary{cursor:pointer}fieldset label:has(input[type=checkbox]){display:flex;align-items:center;gap:.5rem}
+
+.vp-source, .vp-preview, main section {overflow-wrap:anywhere}
+.vp-preview {white-space:pre-wrap}
+textarea {width:100%;border:1px solid #83919f;border-radius:6px;padding:.65rem}
+label:has(input[type=checkbox]) {display:flex;align-items:center;gap:.5rem}

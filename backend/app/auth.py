@@ -29,7 +29,7 @@ def identity(request: Request, conn=Depends(db, scope="function")):
         conn,
         """SELECT u.id AS actor,u.email,m.organization_id AS tenant,m.role,o.name AS workspace
     FROM sessions s JOIN memberships m ON m.id=s.membership_id JOIN users u ON u.id=m.user_id JOIN organizations o ON o.id=m.organization_id
-    WHERE s.digest=:digest AND s.expires_at>now()""",
+    WHERE m.active AND s.digest=:digest AND s.expires_at>now()""",
         digest=digest(request.cookies.get("vp_session", "")),
     ).first()
     if not row:
@@ -68,7 +68,7 @@ def login(
         return JSONResponse({"error": {"code": "http_429"}}, status_code=429)
     row = query(
         conn,
-        "SELECT m.id,u.password_hash FROM memberships m JOIN users u ON u.id=m.user_id JOIN organizations o ON o.id=m.organization_id WHERE email=:email AND o.name=:workspace",
+        "SELECT m.id,u.password_hash FROM memberships m JOIN users u ON u.id=m.user_id JOIN organizations o ON o.id=m.organization_id WHERE m.active AND email=:email AND o.name=:workspace",
         email=body.email.strip().lower(),
         workspace=body.workspace,
     ).first()

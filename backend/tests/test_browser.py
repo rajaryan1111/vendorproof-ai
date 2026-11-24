@@ -257,10 +257,17 @@ def test_browser_workflow(tmp_path):
                     for f in findings
                 )
                 conflict = get("bank_holder", "conflict")
-                source_url = verify + "/findings/" + conflict["id"] + "/sources/0"
+                source_index = next(
+                    i
+                    for i, r in enumerate(conflict["evidence"])
+                    if r["field"] != "account_holder"
+                )
+                source_url = (
+                    verify + "/findings/" + conflict["id"] + f"/sources/{source_index}"
+                )
                 assert (
                     page.request.get(source_url).json()["excerpt"]
-                    == conflict["evidence"][0]["original"]
+                    == conflict["evidence"][source_index]["original"]
                 )
                 assert other.request.get(source_url).status == 404
                 panel = (
@@ -327,6 +334,151 @@ def test_browser_workflow(tmp_path):
                     and audit["actor"]
                     and audit["created_at"]
                 )
+                supplier_page = page.url
+                fid = conflict["id"]
+                exception_url = api + "/exceptions/" + fid
+                exception_page = front + "/exceptions/" + fid
+                page.locator('a[href="/exceptions/' + fid + '"]').click()
+                expect(page.get_by_role("heading", name="Ownership")).to_be_visible()
+                page.get_by_label("Assign to", exact=True).select_option(
+                    label="review" + email
+                )
+                page.get_by_label("Assignment reason").fill(
+                    "Review the cited account holder discrepancy."
+                )
+                page.get_by_role("button", name="Record assignment").click()
+                expect(
+                    page.get_by_text("Assignment recorded", exact=True)
+                ).to_be_visible()
+                reviewed.get_by_role("link", name="Exceptions", exact=True).click()
+                reviewed.get_by_label("Ownership").select_option("mine")
+                reviewed.get_by_role("button", name="Apply filters").click()
+                expect(
+                    reviewed.get_by_text("1 matching · 1 assigned to me · 0 unassigned")
+                ).to_be_visible()
+                reviewed.get_by_role(
+                    "link", name="Updated synthetic supplier · bank holder"
+                ).click()
+                expect(reviewed).to_have_url(exception_page)
+                reviewed.get_by_text("Original evidence (2)").click()
+                expect(
+                    reviewed.get_by_text("Verification run " + run_id)
+                ).to_be_visible()
+                expect(
+                    reviewed.get_by_text(
+                        "Please clarify the account holder name and provide supporting documentation.",
+                        exact=True,
+                    ).first
+                ).to_be_visible()
+                reviewed.get_by_role("button", name="Save draft").click()
+                expect(
+                    reviewed.get_by_text("Revision 1 ·", exact=False)
+                ).to_be_visible()
+                reviewed.get_by_label("Draft subject").select_option(index=1)
+                reviewed.get_by_role(
+                    "button", name="Thank you for your assistance."
+                ).click()
+                reviewed.get_by_role("button", name="Save draft").click()
+                expect(
+                    reviewed.get_by_text("Revision 2 ·", exact=False)
+                ).to_be_visible()
+                old_bank = next(
+                    r["document"]
+                    for r in conflict["evidence"]
+                    if r["field"] == "account_holder"
+                )
+                page.get_by_label("Document to replace").select_option(old_bank)
+                page.get_by_label("Corrected PDF").set_input_files(
+                    {
+                        "name": "corrected-bank.pdf",
+                        "mimeType": "application/pdf",
+                        "buffer": make_pdf(
+                            {
+                                "pages": [
+                                    "Bank verification letter\nAccount holder: Synthetic Vale Private Limited"
+                                ],
+                                "media": ["native"],
+                            }
+                        ),
+                    }
+                )
+                page.get_by_label("Confirm corrected version").check()
+                page.get_by_role("button", name="Upload correction").click()
+                expect(
+                    page.get_by_text("Correction queued", exact=True)
+                ).to_be_visible()
+                version = page.request.get(exception_url).json()["corrections"][0]
+                assert version["state"] == "queued" and version["replaces"] == old_bank
+                subprocess.run(
+                    [
+                        sys.executable,
+                        "-m",
+                        "app.intelligence.worker",
+                        "--job",
+                        version["attempt"],
+                    ],
+                    cwd=backend,
+                    env=env,
+                    check=True,
+                    timeout=120,
+                )
+                reviewed.get_by_role("button", name="Refresh exception").click()
+                reviewed.get_by_role("button", name="Rerun and compare").click()
+                expect(
+                    reviewed.get_by_role("heading", name="Verification comparison")
+                ).to_be_visible()
+                expect(
+                    reviewed.get_by_text("Current outcome ·", exact=False)
+                ).to_contain_text("match")
+                predecision = viewer.request.get(exception_url).json()
+                assert (
+                    predecision["status"] == "assigned"
+                    and len(predecision["comparison"]["current"]) == 1
+                )
+                reviewed.get_by_label("Next state").select_option("resolved")
+                reviewed.get_by_label("Decision reason").fill(
+                    "Reviewed the corrected holder comparison and cited document versions."
+                )
+                reviewed.get_by_label("I reviewed the available evidence").check()
+                reviewed.get_by_role("button", name="Record decision").click()
+                expect(
+                    reviewed.get_by_text("Decision recorded", exact=True)
+                ).to_be_visible()
+                history = viewer.request.get(exception_url).json()["history"]
+                assert [h["kind"] for h in history] == [
+                    "decision",
+                    "comparison",
+                    "assignment",
+                ]
+                assert (
+                    history[0]["status"] == "resolved"
+                    and history[0]["from_state"] == "assigned"
+                )
+                assert all(h["created_at"] and h["actor"] for h in history)
+                assert other.request.get(exception_url).status == 404
+                assert (
+                    other.request.get(
+                        supplier_url + "/documents/" + version["document_id"]
+                    ).status
+                    == 404
+                )
+                assert (
+                    other.request.post(
+                        exception_url + "/drafts",
+                        headers={"X-VP-Request": "1"},
+                        data={
+                            "previous": 0,
+                            "subject": "Synthetic",
+                            "message": "Synthetic",
+                        },
+                    ).status
+                    == 404
+                )
+                assert (
+                    page.request.get(supplier_url + "/documents/" + old_bank).status
+                    == 404
+                )
+                page.goto(supplier_page)
                 viewer.close()
                 stop(api_proc)
                 api_proc = server()
@@ -338,6 +490,13 @@ def test_browser_workflow(tmp_path):
                     front,
                 )
                 page.reload()
+                persisted = page.request.get(exception_url).json()
+                assert persisted["history"] == history and len(persisted["drafts"]) == 2
+                assert (
+                    persisted["run_id"] == run_id
+                    and persisted["comparison"]["compared_run"] != run_id
+                )
+                assert persisted["outcome"] == "conflict"
                 assert any(
                     f["status"] == "dismissed"
                     for f in page.request.get(result_url).json()["findings"]
@@ -346,7 +505,7 @@ def test_browser_workflow(tmp_path):
                     page.get_by_role("heading", name="Updated synthetic supplier")
                 ).to_be_visible()
                 assert page.request.get(url).body() == pdf
-                cited_doc = conflict["evidence"][0]["document"]
+                cited_doc = conflict["evidence"][source_index]["document"]
                 assert page.request.delete(
                     supplier_url + "/documents/" + cited_doc,
                     headers={"X-VP-Request": "1"},

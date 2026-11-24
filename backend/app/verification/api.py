@@ -201,10 +201,22 @@ def details(
     )
     events = {}
     for h in history:
-        item = {k: h[k] for k in ("seq", "actor", "created_at", "status")}
+        item = {
+            k: h[k]
+            for k in ("seq", "actor", "created_at", "status", "kind", "from_state")
+        }
         if user.role in {"admin", "reviewer"}:
             item["reason"] = safe(h.reason)
         events.setdefault(h.finding_id, []).append(item)
+    managed = {
+        r.id
+        for r in query(
+            conn,
+            """SELECT f.id FROM verification_findings f WHERE f.run_id=:rid AND f.organization_id=:tenant AND (EXISTS(SELECT FROM verification_reviews r WHERE r.finding_id=f.id AND (r.kind!='decision' OR r.status IN ('in_progress','awaiting_supplier_response','awaiting_internal_review','reopened'))) OR EXISTS(SELECT FROM exception_corrections c WHERE c.finding_id=f.id) OR EXISTS(SELECT FROM exception_drafts d WHERE d.finding_id=f.id))""",
+            **params,
+            rid=rid,
+        )
+    }
     findings = []
     for f in query(
         conn,
@@ -227,6 +239,7 @@ def details(
                 **f,
                 "evidence": evidence,
                 "history": audit,
+                "managed": f.id in managed,
                 "status": audit[-1]["status"]
                 if audit
                 else "needs_review"
@@ -269,12 +282,23 @@ def review(
     ).one()
     last = query(
         conn,
-        "SELECT seq,status FROM verification_reviews WHERE finding_id=:fid AND organization_id=:tenant AND supplier_id=:sid ORDER BY seq DESC LIMIT 1",
+        "SELECT seq,status,from_state,kind FROM verification_reviews WHERE finding_id=:fid AND organization_id=:tenant AND supplier_id=:sid ORDER BY seq DESC LIMIT 1",
         **params,
         fid=fid,
     ).first()
+    managed = (
+        query(
+            conn,
+            """SELECT EXISTS(SELECT FROM verification_reviews WHERE finding_id=:fid AND organization_id=:tenant AND (kind!='decision' OR status IN ('open','assigned','in_progress','awaiting_supplier_response','awaiting_internal_review','reopened') OR from_state IS NOT NULL AND status IN ('resolved','dismissed'))) OR EXISTS(SELECT FROM exception_corrections WHERE finding_id=:fid AND organization_id=:tenant) OR EXISTS(SELECT FROM exception_drafts WHERE finding_id=:fid AND organization_id=:tenant) AS value""",
+            fid=fid,
+            **params,
+        )
+        .one()
+        .value
+    )
     if (
-        not target.requires_review
+        managed
+        or not target.requires_review
         or latest.id != target.run_id
         or body.previous != (last.seq if last else 0)
         or (last and last.status in {"resolved", "dismissed"})
@@ -285,12 +309,13 @@ def review(
     return dict(
         query(
             conn,
-            "INSERT INTO verification_reviews(organization_id,supplier_id,finding_id,actor,status,reason) VALUES(:tenant,:sid,:fid,:actor,:status,:reason) RETURNING seq,status",
+            "INSERT INTO verification_reviews(organization_id,supplier_id,finding_id,actor,status,reason,from_state) VALUES(:tenant,:sid,:fid,:actor,:status,:reason,:old) RETURNING seq,status",
             **params,
             fid=fid,
             actor=user.actor,
             status=body.status,
             reason=body.reason,
+            old=last.status if last else "open",
         ).one()
     )
 

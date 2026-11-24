@@ -17,6 +17,7 @@ import {
   manage,
   save,
 } from "./workspace";
+import { Queue, ExceptionDetail } from "./Exceptions";
 import "./style.css";
 const router = createBrowserRouter([
   { path: "/login", Component: Login, action: signIn },
@@ -26,6 +27,28 @@ const router = createBrowserRouter([
     ErrorBoundary: Failure,
     loader: () => api("/account"),
     children: [
+      {
+        path: "exceptions",
+        Component: Queue,
+        loader: async ({ request }) => {
+          const [data, members] = await Promise.all([
+            api("/exceptions" + new URL(request.url).search),
+            api("/exceptions/members"),
+          ]);
+          return { data, members };
+        },
+      },
+      {
+        path: "exceptions/:fid",
+        Component: ExceptionDetail,
+        loader: async ({ params, request }) => {
+          const [d, members] = await Promise.all([
+            api("/exceptions/" + params.fid + new URL(request.url).search),
+            api("/exceptions/members"),
+          ]);
+          return { d, members };
+        },
+      },
       { index: true, Component: Home, loader: () => api("/dashboard") },
       {
         path: "logout",

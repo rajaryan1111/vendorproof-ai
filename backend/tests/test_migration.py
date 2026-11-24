@@ -102,6 +102,7 @@ def test_migrate_empty_schema(monkeypatch):
             "organizations",
             "users",
             "memberships",
+            "member_access_events",
             "sessions",
             "suppliers",
             "documents",

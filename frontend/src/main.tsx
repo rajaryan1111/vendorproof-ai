@@ -14,13 +14,15 @@ import {
   Login,
   Failure,
   signIn,
+  signInAvailable,
   manage,
   save,
 } from "./workspace";
+import { Organization, changeAccess } from "./Organization";
 import { Queue, ExceptionDetail } from "./Exceptions";
 import "./style.css";
 const router = createBrowserRouter([
-  { path: "/login", Component: Login, action: signIn },
+  { path: "/login", Component: Login, action: signIn, loader: signInAvailable },
   {
     path: "/",
     Component: Shell,
@@ -48,6 +50,13 @@ const router = createBrowserRouter([
           ]);
           return { d, members };
         },
+      },
+      {
+        path: "organization",
+        Component: Organization,
+        action: changeAccess,
+        loader: ({ request }) =>
+          api("/organization/members?" + new URL(request.url).searchParams),
       },
       { index: true, Component: Home, loader: () => api("/dashboard") },
       {

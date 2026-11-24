@@ -102,6 +102,13 @@ def test_browser_workflow(tmp_path, drill_databases, width):
         provision(conn, workspace + "2", "other" + email, password, "admin")
     engine.dispose()
 
+    def capture(page, name):
+        directory = os.environ.get("VP_BROWSER_CAPTURE_DIR")
+        if directory:
+            destination = Path(directory) / str(page.viewport_size["width"])
+            destination.mkdir(parents=True, exist_ok=True)
+            page.screenshot(path=destination / (name + ".png"))
+
     def server():
         return start(
             [
@@ -131,11 +138,26 @@ def test_browser_workflow(tmp_path, drill_databases, width):
                 browser = pw.chromium.launch(channel="chrome")
                 page = browser.new_page(viewport={"width": width, "height": 844})
                 page.goto(front)
+                page.get_by_role("heading", name="Sign in").wait_for()
+                capture(page, "login")
                 page.get_by_label("Workspace").fill(workspace)
                 page.get_by_label("Email").fill(email)
                 page.get_by_label("Password").fill(password)
                 page.get_by_role("button", name="Sign in").click()
+                page.get_by_role("heading", name="Dashboard").wait_for()
+                capture(page, "dashboard")
+                page.get_by_role("link", name="Organization").click()
+                expect(
+                    page.get_by_role("heading", name="Workspace members")
+                ).to_be_visible()
+                page.get_by_text("Edit access", exact=True).click()
+                expect(
+                    page.get_by_role("combobox", name="Access", exact=True)
+                ).to_be_visible()
+                capture(page, "organization")
                 page.get_by_role("link", name="Suppliers", exact=True).click()
+                page.get_by_role("heading", name="Supplier directory").wait_for()
+                capture(page, "directory")
                 page.get_by_text("Create supplier", exact=True).click()
                 page.get_by_role("button", name="Save supplier").click()
                 assert not page.get_by_label("Supplier name").evaluate(
@@ -161,8 +183,10 @@ def test_browser_workflow(tmp_path, drill_databases, width):
                         "buffer": pdf,
                     }
                 )
+                capture(page, "upload")
                 page.get_by_role("button", name="Upload PDF").click()
                 expect(page.get_by_text("synthetic.pdf", exact=True)).to_be_visible()
+                capture(page, "processing")
                 link = page.get_by_role("link", name="Download")
                 url = link.get_attribute("href")
                 assert page.request.get(url).body() == pdf
@@ -181,6 +205,7 @@ def test_browser_workflow(tmp_path, drill_databases, width):
                 expect(
                     page.get_by_role("heading", name="Extraction candidates")
                 ).to_be_visible()
+                capture(page, "extraction")
                 assert (
                     page.request.get(url + "/processing/" + job).json()[
                         "classification"
@@ -271,6 +296,7 @@ def test_browser_workflow(tmp_path, drill_databases, width):
                 expect(
                     page.get_by_role("heading", name="Findings", exact=True)
                 ).to_be_visible()
+                capture(page, "verification")
                 run_id = page.request.get(verify + "/runs").json()[0]["id"]
                 result_url = verify + "/runs/" + run_id
                 findings = page.request.get(result_url).json()["findings"]
@@ -322,6 +348,7 @@ def test_browser_workflow(tmp_path, drill_databases, width):
                 panel.get_by_role("button", name="Open cited span").first.click()
                 expect(panel.get_by_role("status")).to_contain_text("Page 1")
 
+                capture(page, "sources")
                 repeat = page.request.post(
                     verify + "/runs", headers={"X-VP-Request": "1"}
                 )
@@ -385,6 +412,7 @@ def test_browser_workflow(tmp_path, drill_databases, width):
                 page.get_by_label("Assignment reason").fill(
                     "Review the cited account holder discrepancy."
                 )
+                capture(page, "assignment")
                 page.get_by_role("button", name="Record assignment").click()
                 expect(
                     page.get_by_text("Assignment recorded", exact=True)
@@ -426,6 +454,7 @@ def test_browser_workflow(tmp_path, drill_databases, width):
                     for r in conflict["evidence"]
                     if r["field"] == "account_holder"
                 )
+                capture(reviewed, "draft")
                 page.get_by_label("Document to replace").select_option(old_bank)
                 page.get_by_label("Corrected PDF").set_input_files(
                     {
@@ -469,6 +498,10 @@ def test_browser_workflow(tmp_path, drill_databases, width):
                 expect(
                     reviewed.get_by_text("Current outcome ·", exact=False)
                 ).to_contain_text("match")
+                reviewed.get_by_role(
+                    "heading", name="Verification comparison"
+                ).scroll_into_view_if_needed()
+                capture(reviewed, "comparison")
                 predecision = viewer.request.get(exception_url).json()
                 assert (
                     predecision["status"] == "assigned"
@@ -532,6 +565,8 @@ def test_browser_workflow(tmp_path, drill_databases, width):
                     expect(
                         fresh.get_by_role("heading", name="Exception queue")
                     ).to_be_visible()
+                    capture(fresh, "queue")
+                    capture(reviewed, "resolution")
                     fresh.keyboard.press("Tab")
                     expect(
                         fresh.get_by_role("link", name="Skip to workspace")
@@ -703,6 +738,7 @@ def test_browser_workflow(tmp_path, drill_databases, width):
                     for ref in f["evidence"]
                     if ref["document"] == cited_doc
                 )
+                capture(page, "supplier")
                 page.get_by_role("button", name="Sign out").click()
                 expect(page.get_by_role("heading", name="Sign in")).to_be_visible()
                 assert page.request.get(supplier_url).status == 401

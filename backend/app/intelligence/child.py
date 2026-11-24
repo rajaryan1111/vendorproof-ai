@@ -6,9 +6,12 @@ from pathlib import Path
 
 
 def command(module, settings, *args):
-    python = [sys.executable, "-m", module, *args]
     if settings.environment != "production":
-        return python
+        return [sys.executable, "-m", module, *args]
+    return isolated_command(module, *args)
+
+
+def isolated_command(module, *args):
     app = Path(__file__).resolve().parents[2] / "app"
     venv = Path(sys.prefix)
     cmd = [
@@ -42,5 +45,8 @@ def command(module, settings, *args):
         "--chdir",
         "/work",
         "--",
-        *python,
+        sys.executable,
+        "-m",
+        module,
+        *args,
     ]

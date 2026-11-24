@@ -3,13 +3,14 @@ OnFailure=vendorproof-alert@%n.service
 Description=VendorProof encrypted database and document snapshot
 After=postgresql.service
 RequiresMountsFor=/mnt/vendorproof-backups
+AssertPathIsMountPoint=/mnt/vendorproof-backups
 [Service]
 Type=oneshot
 User=vendorproof
 EnvironmentFile=/etc/vendorproof/app.env
 EnvironmentFile=/etc/vendorproof/backup.env
 WorkingDirectory=/opt/vendorproof/current/backend
-ExecStart=/opt/vendorproof/current/backend/.venv/bin/python -m app.recovery backup --destination ${VP_BACKUP_DIR} --recipient ${VP_BACKUP_RECIPIENT} --days ${VP_BACKUP_DAYS}
+ExecStart=/opt/vendorproof/current/backend/.venv/bin/python -m app.recovery backup --destination /mnt/vendorproof-backups --recipient ${VP_BACKUP_RECIPIENT} --days ${VP_BACKUP_DAYS}
 UMask=0077
 NoNewPrivileges=true
 ProtectSystem=strict

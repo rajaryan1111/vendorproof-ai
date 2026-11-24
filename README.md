@@ -8,6 +8,8 @@ This branch includes workspace sign-in, private versioned PDFs, local extraction
 
 The prepared deployment uses Caddy, systemd, PostgreSQL, private persistent volumes, ClamAV and a separate processing worker. The [deployment checklist and recovery runbook](deploy/OPERATIONS.md) covers environment setup, migrations, grants, HTTPS, monitoring, backups, restore and rollback. Live rollout requires a customer-approved target and operational sign-off.
 
+The [Vercel and Render checklist](deploy/CLOUD.md) covers the free personal validation deployment. Organization administrators can inspect members, change roles and suspend or reinstate access. Account creation remains an operator task.
+
 ## Run locally
 
 Prerequisites used for verification: PostgreSQL 16, Python 3.14 with uv, Node 24 with npm, and Chrome for browser tests. Start your local PostgreSQL service and create an empty database named `vendorproof` owned by your development database role. On a local PostgreSQL installation with database creation privileges, run `createdb vendorproof`.

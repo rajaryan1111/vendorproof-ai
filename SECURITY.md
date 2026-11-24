@@ -62,3 +62,7 @@ Untrusted bytes must pass the ClamAV socket gate, signature, parse, encryption, 
 The API service has write access to private objects. The worker's systemd filesystem view is read-only outside its private temporary space. Each production parser runs under bubblewrap with user, mount and network isolation, a minimal environment and bounded CPU, memory and wall time. The host kernel, service account, scanner, DB owner and backup operators remain trusted boundaries. Treat namespace, disk encryption, patching, alert delivery, backup custody and restore-from-offsite as host-specific acceptance checks.
 
 Caddy enforces body limits, same-origin CSP, HSTS, anti-framing and no-referrer headers. Production cookies require HTTPS. Logs identify templated routes, durations and outcomes. The database runtime role cannot update historic reviews or identities. The dependency and credential scans are release checks with finite coverage.
+
+## Workspace access administration
+
+The Organization page is administrator-only. Role and suspension changes are scoped to the authenticated workspace, revoke that membership’s sessions in the same transaction and append an attributed event. The API serializes changes within an organization and rejects stale edits and self-modification. Initial accounts are created by the database owner. Browser sign-in requires successful database readiness. The free platform check has no workspace routes or database credentials.

@@ -2,6 +2,8 @@
 
 This profile runs one Linux host per customer retention boundary. Caddy serves the compiled SPA and proxies the API on loopback. The API and one worker use a local PostgreSQL 16 socket and the same private object directory. A Linux user namespace isolates each PDF parser. Install these services with systemd. Container networking or a public object store is unnecessary for this topology.
 
+See [Vercel and Render validation](CLOUD.md) for the no-cost hosting profile and its release limits.
+
 ## Before provisioning
 
 Supply an approved Linux host with working unprivileged bubblewrap, an actual DNS hostname, inbound HTTPS (and HTTP for the ACME challenge), a firewall, host patch ownership and console access. Put PostgreSQL, its WAL, objects, temporary staging and swap on encrypted storage. Mount a private, separately recoverable backup destination at `/mnt/vendorproof-backups`. Verify mount identity and access on the actual host. Configure an independent read-only or immutable copy that a compromised application account cannot delete. Store the age private identity offline with authorized recovery operators. Agree on retention, legal holds, disk capacity, recovery objectives and incident contacts before admitting customer data.
@@ -20,7 +22,7 @@ sudo install -d -m 0700 -o vendorproof -g vendorproof /var/lib/vendorproof/objec
 sudo install -d -m 0750 -o root -g vendorproof /etc/vendorproof
 sudo -u postgres createuser vendorproof
 sudo -u postgres createdb vendorproof
-git clone --branch feat/phase-5-production-readiness https://github.com/rajaryan1111/vendorproof-ai.git vendorproof-release
+git clone --branch feat/final-deployment-and-product-polish https://github.com/rajaryan1111/vendorproof-ai.git vendorproof-release
 cd vendorproof-release
 git checkout --detach "$VP_RELEASE"
 test "$(git rev-parse HEAD)" = "$VP_RELEASE"
@@ -40,7 +42,7 @@ Run `freshclam` through the distribution updater. Configure clamd to use the loc
 
 ## Migration and activation
 
-For upgrades, stop writes and the worker, take an encrypted backup using the previous release, and validate a restore in isolation. Test migration time against a representative copy. Revision 005 adds scan attestation, job availability, worker health and lookup indexes. Legacy PDFs start without scan attestation. Migrations use the database owner. The application role has no schema ownership.
+For upgrades, stop writes and the worker, take an encrypted backup using the previous release, and validate a restore in isolation. Test migration time against a representative copy. Revision 006 adds the append-only workspace access history. Revision 005 adds scan attestation, job availability, worker health and lookup indexes. Legacy PDFs start without scan attestation. Migrations use the database owner. The application role has no schema ownership.
 
 ```sh
 release_dir="/opt/vendorproof/releases/$VP_RELEASE"

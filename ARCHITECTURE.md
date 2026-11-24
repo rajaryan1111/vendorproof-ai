@@ -98,3 +98,7 @@ A comparison references the new immutable run and corrected document. It follows
 Caddy terminates TLS, serves the versioned SPA assets and proxies same-origin API requests. The API and PostgreSQL-backed worker run as separate non-root systemd services. One runtime database role has the table privileges required by the application. A separate owner migrates and provisions identities. Production uses bounded connection pools, statement and lock timeouts, an explicitly private storage root and a ClamAV Unix socket.
 
 Revision 005 adds scan-digest attestation, delayed job availability, the requesting actor on new processing attempts, a worker heartbeat and three lookup indexes. Legacy records retain their identities. Document lists and verification-run lists now paginate 20 at a time. A verification run still evaluates at most 30 active PDFs. Release, monitoring and recovery procedures are in [the operations guide](deploy/OPERATIONS.md).
+
+## Personal deployment validation
+
+Vercel serves the production SPA with an optional same-origin external API rewrite. Render's free Docker entry point runs the production parser probe without registering workspace routes. The production application and worker still require the Linux preflight and a shared private volume. Migration 006 records administrator changes to workspace membership access and role in append-only history. See [cloud deployment](deploy/CLOUD.md).

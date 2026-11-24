@@ -69,7 +69,7 @@ def login(
         return JSONResponse({"error": {"code": "http_429"}}, status_code=429)
     row = query(
         conn,
-        "SELECT m.id,u.password_hash FROM memberships m JOIN users u ON u.id=m.user_id JOIN organizations o ON o.id=m.organization_id WHERE m.active AND email=:email AND o.name=:workspace",
+        "SELECT m.id,u.password_hash FROM memberships m JOIN users u ON u.id=m.user_id JOIN organizations o ON o.id=m.organization_id WHERE m.active AND email=:email AND o.name=:workspace FOR SHARE OF m",
         email=body.email.strip().lower(),
         workspace=body.workspace,
     ).first()
@@ -121,5 +121,10 @@ def logout(
         "DELETE FROM sessions WHERE digest=:digest",
         digest=digest(request.cookies["vp_session"]),
     )
-    response.delete_cookie("vp_session")
+    response.delete_cookie(
+        "vp_session",
+        secure=request.app.state.settings.cookie_secure,
+        httponly=True,
+        samesite="strict",
+    )
     return {"ok": True}

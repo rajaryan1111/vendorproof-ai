@@ -68,3 +68,5 @@ The detail page shows the original outcome, explanation, recommended action and 
 ## Release interface
 
 Shared typography, spacing, contrast, button heights, focus rings and table borders apply across sign-in, supplier management, extraction, verification and exceptions. The shell uses a dark neutral sidebar on desktop and wrapping navigation on smaller screens. Dashboard measurements share a single aligned surface. A keyboard skip link moves focus directly to the workspace. Error messages and statuses include text. The acceptance suite covers the complete workflow at 1280 and 390 CSS pixels and checks tablet overflow and keyboard focus at 768 pixels.
+
+The Organization page groups each member’s email, role and access state, with controls revealed on demand. On small screens the account and sign-out control share one row. An offline workspace displays an explanation and a connection retry before requesting credentials.

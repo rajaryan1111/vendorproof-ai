@@ -16,6 +16,7 @@ from .config import Settings
 from .db import db, engine_for, query
 from .documents import router as document_router
 from .intelligence.jobs import router as processing_router
+from .organization import router as organization_router
 from .resolution.api import router as resolution_router
 from .suppliers import router as supplier_router
 from .verification.api import router as verification_router
@@ -46,6 +47,7 @@ def create_app(settings: Settings) -> FastAPI:
     api.include_router(verification_router)
     api.include_router(resolution_router)
     api.include_router(auth_router)
+    api.include_router(organization_router)
     api.include_router(processing_router)
     api.include_router(document_router)
     api.include_router(supplier_router)

@@ -62,6 +62,7 @@ def probes(settings, engine, backup_dir, backup_hours=26):
 def retention_inventory(conn, tenant):
     tables = (
         "memberships",
+        "member_access_events",
         "suppliers",
         "documents",
         "processing_attempts",
@@ -148,7 +149,7 @@ def main():
                     conn.execute(
                         text("SELECT version_num FROM alembic_version")
                     ).scalar_one()
-                    != "005_operations"
+                    != "006_member_access"
                 ):
                     raise ValueError("Migration required")
             print(json.dumps({"operation": "preflight", "outcome": "ready"}))

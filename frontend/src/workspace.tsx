@@ -11,7 +11,7 @@ import {
   useRouteError,
   type ActionFunctionArgs,
 } from "react-router-dom";
-import { apiBase } from "./api";
+import { apiBase, readHealth } from "./api";
 import { Verification } from "./Verification";
 import { Processing } from "./Processing";
 import { Dashboard } from "./Dashboard";
@@ -48,8 +48,9 @@ export async function api(path: string, init?: RequestInit) {
 }
 export function Failure() {
   const error = useRouteError() as { status?: number };
+  if (!error?.status || error.status >= 500) return <Offline />;
   return (
-    <main>
+    <main className="login">
       <h1>Request unavailable</h1>
       <p role="alert">
         {error?.status === 403
@@ -68,7 +69,35 @@ function Submit({ children }: { children: string }) {
   const nav = useNavigation();
   return <button disabled={nav.state !== "idle"}>{children}</button>;
 }
+export async function signInAvailable() {
+  try {
+    await readHealth(AbortSignal.timeout(10000), true);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function Offline() {
+  return (
+    <main className="login">
+      <section>
+        <strong>VendorProof AI</strong>
+        <h1>Workspace offline</h1>
+        <p>
+          Sign-in and document intake are unavailable until the secure workspace
+          is connected.
+        </p>
+        <Link to="/login" reloadDocument>
+          Check connection again
+        </Link>
+      </section>
+    </main>
+  );
+}
+
 export function Login() {
+  if (!useLoaderData()) return <Offline />;
   return (
     <main className="login">
       <section>
@@ -77,7 +106,12 @@ export function Login() {
         <Form method="post">
           <label>
             Workspace
-            <input name="workspace" required maxLength={160} />
+            <input
+              name="workspace"
+              autoComplete="organization"
+              required
+              maxLength={160}
+            />
           </label>
           <label>
             Email
@@ -133,14 +167,19 @@ export function Shell() {
           </NavLink>
           <NavLink to="/exceptions">Exceptions</NavLink>
           <NavLink to="/suppliers">Suppliers</NavLink>
+          {user.role === "admin" && (
+            <NavLink to="/organization">Organization</NavLink>
+          )}
         </nav>
       </aside>
       <main id="workspace" tabIndex={-1}>
         <header>
-          <strong>{user.workspace}</strong>
-          <span>
-            {user.email} · {user.role}
-          </span>
+          <div className="account">
+            <strong>{user.workspace}</strong>
+            <span>
+              {user.email} · {user.role}
+            </span>
+          </div>
           <Form method="post" action="/logout">
             <Submit>Sign out</Submit>
           </Form>
@@ -340,19 +379,13 @@ export function Detail() {
         <Feedback />
         {docs.length === 0 && <p>No documents on file.</p>}
         {docs.map((d) => (
-          <div className="service" key={d.id}>
+          <div className="document-row" key={d.id}>
             <div>
               <strong>{d.filename}</strong>
               <p>
                 {d.bytes} bytes · {d.status}
               </p>
             </div>
-            <Processing
-              path={"/suppliers/" + s.id + "/documents/" + d.id + "/processing"}
-              editable={edit}
-              restricted={user.role !== "admin"}
-              reviewer={user.role === "reviewer"}
-            />
             {user.role === "admin" && (
               <a href={apiBase + "/suppliers/" + s.id + "/documents/" + d.id}>
                 Download
@@ -371,6 +404,12 @@ export function Detail() {
                 </button>
               </Form>
             )}
+            <Processing
+              path={"/suppliers/" + s.id + "/documents/" + d.id + "/processing"}
+              editable={edit}
+              restricted={user.role !== "admin"}
+              reviewer={user.role === "reviewer"}
+            />
           </div>
         ))}
         {(page > 1 || docs.length === 20) && (

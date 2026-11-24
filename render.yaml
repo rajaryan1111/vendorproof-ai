@@ -1,0 +1,12 @@
+# Tests the real container's parser permissions. No customer data services.
+services:
+  - type: web
+    name: vendorproof-runtime-check
+    runtime: docker
+    plan: free
+    branch: feat/final-deployment-and-product-polish
+    rootDir: backend
+    dockerfilePath: ./Dockerfile.check
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    autoDeployTrigger: "off"

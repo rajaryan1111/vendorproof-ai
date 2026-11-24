@@ -8,7 +8,7 @@ This branch includes workspace sign-in, private versioned PDFs, local extraction
 
 The prepared deployment uses Caddy, systemd, PostgreSQL, private persistent volumes, ClamAV and a separate processing worker. The [deployment checklist and recovery runbook](deploy/OPERATIONS.md) covers environment setup, migrations, grants, HTTPS, monitoring, backups, restore and rollback. Live rollout requires a customer-approved target and operational sign-off.
 
-The [Vercel and Render checklist](deploy/CLOUD.md) covers the free personal validation deployment. Organization administrators can inspect members, change roles and suspend or reinstate access. Account creation remains an operator task.
+The [hosted personal validation](https://vendorproof-ai-frontend.vercel.app) shows workspace availability. The [Vercel and Render checklist](deploy/CLOUD.md) covers the free personal validation deployment. Organization administrators can inspect members, change roles and suspend or reinstate access. Account creation remains an operator task.
 
 ## Run locally
 

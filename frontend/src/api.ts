@@ -13,6 +13,18 @@ export async function readHealth(signal: AbortSignal, database = false) {
       credentials: "omit",
     },
   );
-  if (!response.ok || (await response.json())?.status !== "ok")
-    throw new Error("API unavailable");
+  if (!response.ok) throw new Error("API unavailable");
+  const body = await response.json();
+  if (body?.status === "ok") return { status: "ok" } as const;
+  if (
+    !database &&
+    body?.status === "validation_only" &&
+    typeof body.parser_probe_passed === "boolean"
+  ) {
+    return {
+      status: "validation_only",
+      parserReady: body.parser_probe_passed as boolean,
+    } as const;
+  }
+  throw new Error("Unexpected health response");
 }

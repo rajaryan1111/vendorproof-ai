@@ -9,6 +9,7 @@ import {
   useNavigation,
   useOutletContext,
   useRouteError,
+  useRevalidator,
   type ActionFunctionArgs,
 } from "react-router-dom";
 import { apiBase, readHealth } from "./api";
@@ -43,6 +44,10 @@ export async function api(path: string, init?: RequestInit) {
     headers: { "X-VP-Request": "1", ...init?.headers },
   });
   if (res.status === 401 && path != "/login") throw redirect("/login");
+  if (path === "/account" && res.status === 503) {
+    const body = await res.json().catch(() => null);
+    if (body?.error?.code === "workspace_offline") throw redirect("/login");
+  }
   if (!res.ok) throw new Response(null, { status: res.status });
   return res.json();
 }
@@ -69,13 +74,80 @@ function Submit({ children }: { children: string }) {
   const nav = useNavigation();
   return <button disabled={nav.state !== "idle"}>{children}</button>;
 }
-export async function signInAvailable() {
+export async function loadAvailability({ request }: { request: Request }) {
+  const signal = AbortSignal.any([request.signal, AbortSignal.timeout(15000)]);
   try {
-    await readHealth(AbortSignal.timeout(10000), true);
-    return true;
+    const health = await readHealth(signal);
+    if (health.status === "validation_only") return health;
+    await readHealth(signal, true);
+    return { status: "ready" } as const;
   } catch {
-    return false;
+    return { status: "offline" } as const;
   }
+}
+
+export function CheckingWorkspace() {
+  return (
+    <main className="login">
+      <section>
+        <strong>VendorProof AI</strong>
+        <h1>Workspace availability</h1>
+        <p role="status">Checking the connection…</p>
+      </section>
+    </main>
+  );
+}
+
+function HostedAvailability({ parserReady }: { parserReady: boolean }) {
+  const check = useRevalidator();
+  const checking = check.state === "loading";
+  return (
+    <main className="login availability">
+      <section aria-labelledby="availability-title">
+        <strong>VendorProof AI</strong>
+        <h1 id="availability-title">Hosted workspace</h1>
+        <p>
+          This deployment runs connection and security checks. The full supplier
+          workflow is available locally.
+        </p>
+        <dl className="availability-checks">
+          <div>
+            <dt>API connection</dt>
+            <dd aria-live="polite">{checking ? "Checking…" : "Connected"}</dd>
+          </div>
+          <div>
+            <dt>PDF parser isolation</dt>
+            <dd>
+              {checking
+                ? "Checking…"
+                : parserReady
+                  ? "Verified"
+                  : "Unavailable"}
+            </dd>
+          </div>
+        </dl>
+        <h2>Unavailable here</h2>
+        <ul>
+          <li>Workspace sign-in and supplier records</li>
+          <li>Private PDF uploads, storage and downloads</li>
+          <li>OCR, document verification and exception review</li>
+        </ul>
+        <p>Private files and credentials stay out of this deployment.</p>
+        <footer>
+          <button
+            type="button"
+            disabled={checking}
+            onClick={() => void check.revalidate()}
+          >
+            Check again
+          </button>
+          <a href="https://github.com/rajaryan1111/vendorproof-ai/blob/feat/final-deployment-and-product-polish/README.md#run-locally">
+            Local setup guide
+          </a>
+        </footer>
+      </section>
+    </main>
+  );
 }
 
 function Offline() {
@@ -97,7 +169,11 @@ function Offline() {
 }
 
 export function Login() {
-  if (!useLoaderData()) return <Offline />;
+  const availability = useLoaderData<typeof loadAvailability>();
+  if (availability.status === "offline") return <Offline />;
+  if (availability.status === "validation_only") {
+    return <HostedAvailability parserReady={availability.parserReady} />;
+  }
   return (
     <main className="login">
       <section>

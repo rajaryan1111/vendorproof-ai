@@ -14,7 +14,8 @@ import {
   Login,
   Failure,
   signIn,
-  signInAvailable,
+  loadAvailability,
+  CheckingWorkspace,
   manage,
   save,
 } from "./workspace";
@@ -22,10 +23,17 @@ import { Organization, changeAccess } from "./Organization";
 import { Queue, ExceptionDetail } from "./Exceptions";
 import "./style.css";
 const router = createBrowserRouter([
-  { path: "/login", Component: Login, action: signIn, loader: signInAvailable },
+  {
+    path: "/login",
+    Component: Login,
+    action: signIn,
+    loader: loadAvailability,
+    HydrateFallback: CheckingWorkspace,
+  },
   {
     path: "/",
     Component: Shell,
+    HydrateFallback: CheckingWorkspace,
     ErrorBoundary: Failure,
     loader: () => api("/account"),
     children: [

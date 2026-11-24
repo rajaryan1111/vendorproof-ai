@@ -1,15 +1,8 @@
 # Personal validation on Vercel and Render
 
-The free deployment serves the actual frontend and measures parser isolation in a non-root Render container. The Render entry point has no database connection, storage credentials, scanner bypass or workspace routes. It rejects sign-in, uploads, downloads and all other workspace operations. Use synthetic local acceptance to exercise those workflows until a suitable host is available.
+This ₹0 deployment uses the existing Vercel Hobby frontend and a single Render Free web service. The hosted page displays the API connection and the result of Render’s startup parser probe. It offers a manual recheck and local setup instructions. A failed or unrecognized health response leaves sign-in closed.
 
-| Control | Free validation | Requirement for customer intake |
-|---|---|---|
-| Origin and sessions | Vercel serves the Vite bundle and proxies API paths over HTTPS. The browser always uses its own origin in production builds. | Set one exact frontend origin in the API. Test host-only Secure, HttpOnly, SameSite=Strict cookies, CSRF rejection, source-IP throttling and no-store responses through the real proxy. |
-| Private objects | No document bytes are accepted. Render Free has ephemeral filesystems. Even paid disks attach to one instance. | Run the existing API and worker on one approved Linux host with the same encrypted private volume, or qualify a shared encrypted store and matching restore implementation before splitting them. |
-| ClamAV and parser | The check launches the same bubblewrap command and PyMuPDF/Tesseract import probe at startup. A failed probe is reported as false. | The Linux API validates PDFs in a namespace during upload, so moving just the worker leaves intake unprotected. Both processes require successful preflight, official fresh signatures and actual isolation on their host. |
-| Worker and PostgreSQL | Free Render compute has no background worker type. A free database expires after 30 days and lacks managed backups. No database or worker is provisioned. | Use the documented Linux worker and private PostgreSQL, or use paid Render PostgreSQL with a verified TLS endpoint, runtime grants, bounded connection pools, owner migrations, and restricted inbound access. |
-| Backups and alerts | No customer records or recovery destination on the validation service. | Mount an independent encrypted backup destination, keep the age identity offline, test a restore and verify an alert with an operator. |
-| Secrets and logs | No secrets are needed in either validation service. Request access logs are disabled in the check. | Populate provider secret facilities for the relevant service only, restrict platform logs and validate redaction on the actual ingress. |
+The hosted API registers only the public health diagnostic. It has no sessions, tenant database, document store, ClamAV service or OCR worker. Workspace requests return 503. The frontend exposes no credential or upload form in this mode. A successful parser probe alone never enables supplier operations. Run the [local application](../README.md#run-locally) for the complete private workflow.
 
 ## Verified personal deployment
 
@@ -31,8 +24,4 @@ curl --silent --show-error --output /dev/null --write-out '%{http_code}\n' "$VP_
 curl --fail --head "$VP_FRONTEND_ORIGIN/login"
 ```
 
-The Vercel build uses an external rewrite; API URLs never fall through to the SPA. A missing upstream leaves API paths unserved. Separately check any future production upstream at 5 MiB with synthetic PDF content. A configured rewrite must preserve request bodies, the Origin header, cookies and private response headers. Validate client-IP attribution at both proxy hops before using address-based login limits. Remove obsolete upstream routes when retiring a host.
-
-For a production release follow [the Linux operations guide](OPERATIONS.md). Supply an approved Linux API/worker target with DNS and a tested namespace policy. If using Render PostgreSQL from that host, allow only the host’s stable egress CIDR, use the provider’s verified certificate chain and test recovery from outside the primary database. Keep migrations and initial provisioning under a separate database owner. Verify grants after every migration.
-
-Provider references: [Render Free](https://render.com/docs/free), [disk constraints](https://render.com/docs/disks), [PostgreSQL access](https://render.com/docs/postgresql-creating-connecting), [Vercel external rewrites](https://vercel.com/docs/routing/rewrites), [Hobby usage](https://vercel.com/docs/plans/hobby).
+The Vercel build uses a same-origin external rewrite and private, no-store caching for API responses. Keep the existing Hobby project and the single Free service when publishing revisions. Frontend-only changes deploy from the tracked Git branch. The Render service needs a new deployment only when its release changes.

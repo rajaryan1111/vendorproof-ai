@@ -67,7 +67,7 @@ Audit consequential actions (identity/role changes, supplier updates, upload/rep
 
 ## Deployment and integrations
 
-Verified local development uses native PostgreSQL 16 and documented app commands; deployment topology is undecided. Production requires TLS, managed secret injection, private durable storage, backups, migration discipline, monitoring, and a malware-scanning integration boundary. External OCR/model, email, identity, and storage services sit behind adapters; no API key or service availability is assumed. See DATA_POLICY.md and SECURITY.md.
+The Phase 5 deployment profile runs Caddy, API and worker services on one Linux host, with PostgreSQL 16 on a private socket and separate persistent object and backup storage. Production requires TLS, managed secret injection, private durable storage, backups, migration discipline, monitoring, and a malware-scanning integration boundary. External OCR/model, email, identity, and storage services sit behind adapters; no API key or service availability is assumed. See DATA_POLICY.md and SECURITY.md.
 
 ## Local processing contract (implemented)
 
@@ -92,3 +92,9 @@ Alembic revision `004_resolution` adds membership activity, two immutable tables
 The API serializes writes with the supplier row lock. Assignment and decisions check the observed review sequence. Drafts check their own revision. Correction uploads validate the PDF, authorize the target, preserve the replacement relationship, link the finding and enqueue the ordinary processing job in the request transaction. A per-finding request UUID supports retries. Existing file storage retains its documented filesystem crash boundary.
 
 A comparison references the new immutable run and corrected document. It follows replacement ancestry and matches the original rule and cited counterparts. Checklist comparisons also match the required category. Resolution after a linked correction checks the latest linked version, extraction state, displayed comparison, current input fingerprint and supporting result again inside the decision transaction. An empty comparison keeps the exception open for investigation.
+
+## Phase 5 deployment profile
+
+Caddy terminates TLS, serves the versioned SPA assets and proxies same-origin API requests. The API and PostgreSQL-backed worker run as separate non-root systemd services. One runtime database role has the table privileges required by the application. A separate owner migrates and provisions identities. Production uses bounded connection pools, statement and lock timeouts, an explicitly private storage root and a ClamAV Unix socket.
+
+Revision 005 adds scan-digest attestation, delayed job availability, the requesting actor on new processing attempts, a worker heartbeat and three lookup indexes. Legacy records retain their identities. Document lists and verification-run lists now paginate 20 at a time. A verification run still evaluates at most 30 active PDFs. Release, monitoring and recovery procedures are in [the operations guide](deploy/OPERATIONS.md).

@@ -63,7 +63,7 @@ Phase 1 establishes the application, PostgreSQL schema/migrations, authenticatio
 
 ## Future scope
 
-OCR and structured extraction, document classification, configurable requirement sets, evidence-backed cross-document checks, exception queues, reviewer assignment, correction drafts, reprocessing, integrations, and production deployment. Each item is gated by its roadmap phase and security review.
+Phases 2–4 delivered OCR and structured extraction, configurable checks, exception ownership, drafts and reprocessing. Future integrations and live deployment require an approved environment and security review.
 
 ## Out of scope
 
@@ -95,3 +95,7 @@ FR-004 now delivers local extraction reports for supported English labels in reg
 ## Phase 4 exception resolution
 
 An administrator can assign a review-required finding to an active reviewer or administrator in its workspace. Members can find work by supplier, severity, owner, status and time open. Each exception retains its original verification run. The owner can prepare a correction request, review a corrected document against the original finding and record a reasoned decision. Procurement can continue to see outstanding findings from earlier runs.
+
+## Release operating boundary
+
+The product supports supplier onboarding through human resolution and restart-persistent audit history. The release includes a deployment profile, private scan gate, host probes and encrypted recovery tooling. Customer intake depends on an approved host, retention boundary, tested backup custody and deployment acceptance.

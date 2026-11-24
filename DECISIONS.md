@@ -99,3 +99,9 @@ Accepted on 2026-11-24. Ownership, comparisons and decisions extend the existing
 Open and assigned track initial ownership. Work can move to in progress, awaiting supplier response, or awaiting internal review. Awaiting supplier response requires a move back to active or internal review before resolution. Dismissal requires a reason. Resolved and dismissed findings can only move to reopened, with explicit justification. Reassignment during active review preserves its status.
 
 Supplier-facing editing uses approved subjects and composable sentences to keep raw evidence and internal notes out of messages. Reverification is an explicit action after processing. An unsupported or absent comparable outcome requires further investigation. Migration downgrade refuses to discard Phase 4 history or inactive membership state.
+
+## ADR-011 — Native services and coordinated recovery
+
+Accepted for deployment preparation. Local Tesseract, PostgreSQL job claiming and a private shared object store fit a modular monolith on a single encrypted Linux host. Systemd can confine the worker's filesystem and Caddy can serve the app and API under one origin. This profile uses native service manifests and keeps the operational dependency count small.
+
+A PostgreSQL exported snapshot anchors an encrypted bundle of the exact immutable objects it references. Recovery verifies the independent ciphertext digest and each restored object. Customers can establish outage and recovery targets using their own storage and dataset. Selective erasure requirements, geographic replicas and provider controls remain deployment decisions.

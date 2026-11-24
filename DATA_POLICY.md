@@ -33,7 +33,7 @@ Use synthetic, clearly labeled demo data only. Never use actual customer or supp
 
 ## Phase 1 local file lifecycle
 
-Only PDFs up to 5 MiB are accepted. Bytes are stored under tenant and document UUIDs, with owner-only file permissions. The development host supplies disk encryption. Replacement creates a new immutable object and archives the previous record in one database transaction. Archiving hides metadata and disables download. Physical purge, backup expiry, malware scanning and orphan reconciliation require deployment-specific implementation. A crash between object write and database commit can leave a private unreferenced file. Use synthetic data locally.
+Only PDFs up to 5 MiB are accepted. Bytes are stored under tenant and document UUIDs, with owner-only file permissions. The development host supplies disk encryption. Replacement creates a new immutable object and archives the previous record in one database transaction. Archiving hides metadata and disables download. Phase 5 implements private scan attestation and configurable backup expiry. Physical retirement and orphan reconciliation require the storage owner and customer retention policy. A crash between object write and database commit can leave a private unreferenced file. Use synthetic data locally.
 
 ## Backup and incident handling
 
@@ -52,3 +52,9 @@ Treat stored original and normalized values, citations, policy context and revie
 Assignment and decision records retain workspace membership references, timestamps, reasons and state changes. Draft revisions retain subject, approved message text, author and time under their originating finding and supplier. Internal reasons and extracted values are excluded from draft generation. Reassignment transfers draft access to the current owner. Administrators retain access.
 
 Linked corrections retain the upload request ID, actor, immutable document version and SHA-256 provenance. Archived source bytes remain private. Historical metadata and saved text follow the existing workspace retention policy. Phase 4 introduces no purge schedule. Drafts have no delivery destination or external transport.
+
+## Deployment retention boundary
+
+Deploy one customer retention boundary per instance when physical retirement is required. Record the agreed lifecycle and holds for originals, superseded files, OCR text, candidates, verification evidence, notes, drafts and audit events. The operator inventory reports per-tenant counts. Archived material remains retained until authorized retirement. Customer-specific selective erasure in a shared immutable database requires an approved procedure before onboarding.
+
+Recovery bundles contain the database and its referenced byte objects. They exclude login sessions, throttling data and worker heartbeat. Restrict access to backup operators, keep decryption identities separate and expire ciphertext according to the configured retention. Copies outside the timer's destination require matching expiry and hold policies. Reconcile post-snapshot deletions and revocations on restore. See the disposal and recovery steps in [operations](deploy/OPERATIONS.md).

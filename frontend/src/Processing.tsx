@@ -110,7 +110,7 @@ export function Evidence({ report }: { report: Report }) {
                   · OCR engine confidence {s.confidence.toFixed(1)}/100
                 </small>
               )}
-              <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+              <pre className="vp-preview">
                 {s.text}
               </pre>
             </div>

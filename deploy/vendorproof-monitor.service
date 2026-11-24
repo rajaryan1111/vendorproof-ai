@@ -1,0 +1,16 @@
+[Unit]
+Wants=vendorproof-auth-monitor.service
+OnFailure=vendorproof-alert@%n.service
+Description=Probe VendorProof API, worker, queue, storage and backups
+[Service]
+Type=oneshot
+User=vendorproof
+EnvironmentFile=/etc/vendorproof/app.env
+EnvironmentFile=/etc/vendorproof/backup.env
+WorkingDirectory=/opt/vendorproof/current/backend
+ExecStart=/usr/bin/curl --fail --silent --max-time 5 --output /dev/null http://127.0.0.1:8000/api/v1/health/db
+ExecStart=/opt/vendorproof/current/backend/.venv/bin/python -m app.operations monitor --backups ${VP_BACKUP_DIR}
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true

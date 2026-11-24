@@ -1,5 +1,7 @@
 import json
 import logging
+from datetime import UTC, datetime
+from time import monotonic
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, Request
@@ -34,7 +36,10 @@ def failure(status: int, code: str, headers=None):
 
 
 def create_app(settings: Settings) -> FastAPI:
-    api = FastAPI(title="VendorProof AI")
+    api = FastAPI(
+        title="VendorProof AI",
+        openapi_url=None if settings.environment == "production" else "/openapi.json",
+    )
 
     api.state.engine = engine_for(settings) if settings.database_url else None
     api.state.settings = settings
@@ -53,8 +58,27 @@ def create_app(settings: Settings) -> FastAPI:
     @api.middleware("http")
     async def audit(request: Request, call_next):
         identifier = uuid4().hex
+        started = monotonic()
         try:
-            if request.method in {"POST", "PATCH", "DELETE", "PUT"} and (
+            size = request.headers.get("content-length", "")
+            limit = (
+                5 * 1024**2
+                if request.headers.get("content-type") == "application/pdf"
+                else 65536
+            )
+            if size and (
+                not size.isascii()
+                or not size.isdecimal()
+                or len(size) > 10
+                or int(size) > limit
+            ):
+                response = failure(413, "request_too_large")
+            elif (
+                request.headers.get("transfer-encoding")
+                and settings.environment == "production"
+            ):
+                response = failure(411, "length_required")
+            elif request.method in {"POST", "PATCH", "DELETE", "PUT"} and (
                 request.headers.get("X-VP-Request") != "1"
                 or request.headers.get("origin") not in [None, *settings.cors_origins]
             ):
@@ -65,10 +89,29 @@ def create_app(settings: Settings) -> FastAPI:
             response = failure(500, "internal_error")
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Request-ID"] = identifier
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["X-Frame-Options"] = "DENY"
+        if settings.environment == "production":
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'none'; frame-ancestors 'none'"
+            )
+            response.headers["Strict-Transport-Security"] = "max-age=31536000"
         logger.info(
             json.dumps(
                 {
                     "event": "request",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "severity": "ERROR"
+                    if response.status_code >= 500
+                    else "WARNING"
+                    if response.status_code >= 400
+                    else "INFO",
+                    "operation": request.method
+                    + " "
+                    + getattr(request.scope.get("route"), "path", "unmatched"),
+                    "duration_ms": round((monotonic() - started) * 1000, 1),
+                    "tenant": getattr(request.state, "tenant", None),
                     "request_id": identifier,
                     "status": response.status_code,
                 }

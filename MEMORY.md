@@ -52,6 +52,17 @@ Release evidence on 2026-11-24: Python compilation and Ruff lint/format passed f
 
 Operational limits: verification runs retain the existing 30-active-document bound. Queue age uses elapsed days with a selectable threshold. A correction with no supported comparable result remains open for investigation or an explicitly justified dismissal. Downgrading a database with Phase 4 history requires an archival plan.
 
-## Exact next phase
+## Phase 5 deployment preparation
 
-Phase 5 — production readiness. Scope includes deployment security, observability, backup and restore, retention and operational verification. Separate authorization is required.
+The feature branch starts at Phase 4 release `ccdf93f8b6bdbd03438bb2fe0bc128bd7ff817bc`. Application release evidence, external gates and the current checkpoint follow below.
+
+Revision 005 records scan attestations, worker availability and processing actors. The release adds Linux service units, a same-origin TLS edge, a private ClamAV gate, a namespace-confined production parser, host probes, encrypted recovery and release CI. UI changes cover navigation, forms, responsive layout and paginated document and verification history. The release process uses the verified feature branch.
+
+Local evidence on 2026-11-24 (macOS arm64, PostgreSQL 16, Python 3.14, Node 24):
+
+- 78 pytest cases passed, including real Chrome at 1280 and 390 px, tablet overflow and keyboard focus at 768 px, a Caddy TLS smoke test, migration upgrade/downgrade, real ClamAV synthetic detection and outage, concurrent claims, tenant restrictions and a recovery exercise. Nine Vitest cases passed. Python compilation, Ruff lint/format, ESLint, TypeScript and the Vite production build passed. pip-audit and npm audit reported zero known vulnerabilities. The tracked-path credential signature check passed. Upstream deprecation and bundler notices persist.
+- The local encrypted snapshot contained six versioned PDFs (5,357,016 ciphertext bytes). Backup took 0.097 seconds and restore took 0.082 seconds in the recorded run. The tested recovery point included the assigned, corrected and human-resolved finding before the snapshot. Restored PDFs matched SHA-256. Fresh logins recovered the supplier, extraction report, historical run, two drafts and audit, and the other workspace remained denied. Session rows were excluded from the backup. The timed exercise excludes provisioning, offsite transfer, DNS and operator response.
+- One synthetic supplier, six versions and 15 local HTTP reads per operation produced median queue/directory/dashboard/exception-detail times of 2.8/2.3/2.6/3.6 ms and response sizes of 3062/266/1020/5180 bytes. Four simultaneous small uploads completed in 0.15 s. The 11-document evaluation (13 pages, three OCR pages) measured a 0.003 s median and 0.196 s maximum per document with 9,465,682 peak Python-allocated bytes. The whole evaluation process reached 97,304,576 bytes RSS. The web build emitted 110.51 kB gzipped JS and 3.04 kB gzipped CSS. These are local samples.
+- The worker, queue, OCR, DB and backup probes were healthy. The local disk had about 6.4% free, and the 15% headroom check correctly flagged it. Runtime-role grants were applied in disposable PostgreSQL and verified for membership row locking, scan attestation and denial of identity/review updates.
+
+The owner selected deployment preparation and has no approved hostname or production host. External gates include encrypted persistent volumes, live TLS, host isolation and scanner updates, an independent backup destination and offline recovery identity, production restore, alert delivery, retention policy and sign-off. Selective physical deletion in a shared immutable database requires a separate approved procedure. See [operations](deploy/OPERATIONS.md) for exact commands. Resolve the published release using the feature branch's remote SHA and check its CI run.

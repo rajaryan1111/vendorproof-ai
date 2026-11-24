@@ -1,0 +1,7 @@
+[Unit]
+Description=Probe VendorProof every minute
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=60
+[Install]
+WantedBy=timers.target

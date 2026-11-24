@@ -63,3 +63,7 @@ Unsupported source data, failed processing and uncertain classifications produce
 ## Correction guidance
 
 Guidance is a local deterministic mapping from the historical rule, outcome and recognized requirement category. Users see the original rule explanation alongside the requested action. An expired date, a missing agreement and a name discrepancy produce different instructions. Insufficient extraction requests clarification or a clearer copy. Draft wording draws only from controlled sentences and subjects. This stage performs no inference on supplier text and makes no provider calls.
+
+## Production processing boundary
+
+New production uploads require a successful malware scan followed by bounded PDF validation. A legacy document needs a matching scan attestation before production extraction. The offline extraction engine and versioned rule semantics are preserved. Linux parser processes receive document bytes through stdin, run in a private namespace with read-only code and dependencies, and have no application secrets or private object tree mounted. Scanner and parser readiness are host acceptance gates.

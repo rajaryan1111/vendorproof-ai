@@ -302,14 +302,16 @@ export function Verification({
     [result, setResult] = useState<Result | null>(null);
   const [busy, setBusy] = useState(true),
     [error, setError] = useState("");
-  const load = async () => {
+  const [historyPage, setHistoryPage] = useState(1);
+  const load = async (page = 1) => {
     const [c, rs] = await Promise.all([
       request<Config>(base + "/policy"),
-      request<Run[]>(base + "/runs"),
+      request<Run[]>(base + "/runs?page=" + page),
     ]);
     const current = rs.length
       ? await request<Result>(base + "/runs/" + rs[0].id)
       : null;
+    setHistoryPage(page);
     setConfig(c);
     setRuns(rs);
     setResult(current);
@@ -328,7 +330,7 @@ export function Verification({
   useEffect(() => {
     void action(load);
   }, [base]);
-  const selected = result?.id === runs[0]?.id;
+  const selected = historyPage === 1 && result?.id === runs[0]?.id;
   const review = async (e: FormEvent<HTMLFormElement>, f: Finding) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
@@ -410,7 +412,32 @@ export function Verification({
           </select>
         </label>
       )}
-      {!result && !busy && <p>Not evaluated.</p>}
+      {(historyPage > 1 || runs.length === 20) && (
+        <footer>
+          {historyPage > 1 && (
+            <button
+              disabled={busy}
+              onClick={() => void action(() => load(historyPage - 1))}
+            >
+              Newer verification runs
+            </button>
+          )}
+          Page {historyPage}
+          {runs.length === 20 && (
+            <button
+              disabled={busy}
+              onClick={() => void action(() => load(historyPage + 1))}
+            >
+              Older verification runs
+            </button>
+          )}
+        </footer>
+      )}
+      {!result && !busy && (
+        <p>
+          {historyPage === 1 ? "Not evaluated." : "No more verification runs."}
+        </p>
+      )}
       {result && (
         <>
           <p role="status">
@@ -428,7 +455,10 @@ export function Verification({
           {result.checklist.map((r) => (
             <p key={r.category}>
               {r.category} · {label(r.outcome)}{" "}
-              {r.expiry_check ? " · Expiry check enabled" : " · Expiry check inactive"} {r.when_type && " · type " + r.when_type}{" "}
+              {r.expiry_check
+                ? " · Expiry check enabled"
+                : " · Expiry check inactive"}{" "}
+              {r.when_type && " · type " + r.when_type}{" "}
               {r.when_jurisdiction && " · jurisdiction " + r.when_jurisdiction}
             </p>
           ))}
@@ -442,7 +472,9 @@ export function Verification({
               <p>
                 {f.severity} severity · {label(f.status)}
               </p>
-              {f.requires_review && <a href={"/exceptions/"+f.id}>Open exception</a>}
+              {f.requires_review && (
+                <a href={"/exceptions/" + f.id}>Open exception</a>
+              )}
               <p>{f.explanation}</p>
               <Evidence
                 refs={f.evidence}
@@ -457,7 +489,8 @@ export function Verification({
               {selected &&
                 !archived &&
                 ["admin", "reviewer"].includes(role) &&
-                !f.managed && f.requires_review &&
+                !f.managed &&
+                f.requires_review &&
                 !["resolved", "dismissed"].includes(f.status) && (
                   <form onSubmit={(e) => void review(e, f)}>
                     <label>

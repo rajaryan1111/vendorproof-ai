@@ -1,0 +1,7 @@
+[Unit]
+Description=Record a critical VendorProof service failure
+[Service]
+Type=oneshot
+DynamicUser=yes
+NoNewPrivileges=true
+ExecStart=/usr/bin/logger --priority daemon.crit --tag vendorproof-alert "Service %i failed; inspect its journal and the recovery runbook"

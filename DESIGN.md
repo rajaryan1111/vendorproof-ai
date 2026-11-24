@@ -64,3 +64,7 @@ Administrators configure requirements on the supplier detail page. Each historic
 Open **Exceptions** from the sidebar or **Open exception** on a supplier finding. Queue counts reflect applied filters. Age measures completed 24-hour periods since finding creation. Minimum age is a user-selected threshold. Older findings appear first within the chosen sort order. Historical and archived-supplier findings stay discoverable.
 
 The detail page shows the original outcome, explanation, recommended action and source locations. Ownership, draft revisions, corrected files, verification comparison and decision history share this page. Role and ownership determine the available controls. The editor previews approved wording and identifies invalid edits. Upload and decision forms require human confirmation. Refresh retrieves current processing and ownership information. History pages show up to 20 records per section.
+
+## Release interface
+
+Shared typography, spacing, contrast, button heights, focus rings and table borders apply across sign-in, supplier management, extraction, verification and exceptions. The shell uses a dark neutral sidebar on desktop and wrapping navigation on smaller screens. Dashboard measurements share a single aligned surface. A keyboard skip link moves focus directly to the workspace. Error messages and statuses include text. The acceptance suite covers the complete workflow at 1280 and 390 CSS pixels and checks tablet overflow and keyboard focus at 768 pixels.

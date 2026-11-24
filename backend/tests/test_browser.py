@@ -9,11 +9,21 @@ from pathlib import Path
 from urllib.request import urlopen
 from uuid import uuid4
 
+import psycopg
+import pytest
+from alembic import command
+from alembic.config import Config
+from fastapi.testclient import TestClient
 from playwright.sync_api import expect, sync_playwright
+from psycopg import sql
+from sqlalchemy.engine import make_url
 
 from app.config import Settings
 from app.db import engine_for
+from app.main import create_app
+from app.operations import probes
 from app.provision import provision
+from app.recovery import backup, db_params, digest, restore
 from evaluation.v1.fixtures import make_pdf
 
 
@@ -41,15 +51,44 @@ def stop(proc):
     proc.wait(timeout=10)
 
 
-def test_browser_workflow(tmp_path):
+@pytest.fixture
+def drill_databases(monkeypatch):
+    original = Settings(database_url=os.environ["VP_TEST_DATABASE_URL"])
+    params = db_params(original)
+    names = ["vp_drill_" + uuid4().hex for _ in range(2)]
+    with psycopg.connect(**params, autocommit=True) as conn:
+        for name in names:
+            conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
+        try:
+            urls = [
+                make_url(str(original.database_url))
+                .set(database=n)
+                .render_as_string(hide_password=False)
+                for n in names
+            ]
+            monkeypatch.setenv("VP_DATABASE_URL", urls[0])
+            command.upgrade(Config("alembic.ini"), "head")
+            yield urls
+        finally:
+            for name in names:
+                conn.execute(
+                    sql.SQL("DROP DATABASE {} WITH (FORCE)").format(
+                        sql.Identifier(name)
+                    )
+                )
+
+
+@pytest.mark.parametrize("width", [1280, 390], ids=["desktop", "mobile"])
+def test_browser_workflow(tmp_path, drill_databases, width):
     backend = Path(__file__).resolve().parents[1]
     front = "http://localhost:55173"
     api = "http://localhost:58001/api/v1"
     env = {
         **os.environ,
-        "VP_DATABASE_URL": os.environ["VP_TEST_DATABASE_URL"],
+        "VP_DATABASE_URL": drill_databases[0],
+        "VP_ENVIRONMENT": "testing",
         "VP_COOKIE_SECURE": "false",
-        "VP_STORAGE_ROOT": str(tmp_path),
+        "VP_STORAGE_ROOT": str(tmp_path / "source-objects"),
         "VP_CORS_ORIGINS": '["http://localhost:55173"]',
         "VITE_API_BASE_URL": api,
     }
@@ -90,7 +129,7 @@ def test_browser_workflow(tmp_path):
         try:
             with sync_playwright() as pw:
                 browser = pw.chromium.launch(channel="chrome")
-                page = browser.new_page()
+                page = browser.new_page(viewport={"width": width, "height": 844})
                 page.goto(front)
                 page.get_by_label("Workspace").fill(workspace)
                 page.get_by_label("Email").fill(email)
@@ -288,7 +327,7 @@ def test_browser_workflow(tmp_path):
                 )
                 assert repeat.json()["id"] == run_id
                 assert other.request.get(result_url).status == 404
-                viewer = browser.new_context()
+                viewer = browser.new_context(viewport={"width": width, "height": 844})
                 assert viewer.request.post(
                     api + "/login",
                     headers={"X-VP-Request": "1"},
@@ -478,6 +517,152 @@ def test_browser_workflow(tmp_path):
                     page.request.get(supplier_url + "/documents/" + old_bank).status
                     == 404
                 )
+                for active in (page, reviewed):
+                    assert active.evaluate(
+                        "document.documentElement.scrollWidth <= innerWidth"
+                    )
+                if width == 1280:
+                    reviewed.set_viewport_size({"width": 768, "height": 1024})
+                    assert reviewed.evaluate(
+                        "document.documentElement.scrollWidth <= innerWidth"
+                    )
+                    fresh = viewer.new_page()
+                    fresh.set_viewport_size({"width": 768, "height": 1024})
+                    fresh.goto(front + "/exceptions")
+                    expect(
+                        fresh.get_by_role("heading", name="Exception queue")
+                    ).to_be_visible()
+                    fresh.keyboard.press("Tab")
+                    expect(
+                        fresh.get_by_role("link", name="Skip to workspace")
+                    ).to_be_focused()
+                    fresh.keyboard.press("Enter")
+                    expect(fresh.locator("#workspace")).to_be_focused()
+                    fresh.close()
+                    checkpoints = {}
+                    for operation, endpoint in {
+                        "queue": api + "/exceptions",
+                        "directory": api + "/suppliers",
+                        "dashboard": api + "/dashboard",
+                        "comparison": exception_url,
+                    }.items():
+                        elapsed = []
+                        for _ in range(15):
+                            start_at = time.perf_counter()
+                            response = page.request.get(endpoint)
+                            assert response.ok
+                            elapsed.append((time.perf_counter() - start_at) * 1000)
+                        checkpoints[operation] = (
+                            round(sorted(elapsed)[7], 1),
+                            round(max(elapsed), 1),
+                            len(response.body()),
+                        )
+                    print("release probe (median_ms, max_ms, bytes):", checkpoints)
+                    source = Settings(
+                        database_url=drill_databases[0],
+                        storage_root=Path(env["VP_STORAGE_ROOT"]),
+                    )
+                    restored = Settings(
+                        database_url=drill_databases[1],
+                        storage_root=tmp_path / "restored-objects",
+                    )
+                    keyfile = tmp_path / "recovery-key"
+                    subprocess.run(
+                        ["age-keygen", "-o", str(keyfile)],
+                        check=True,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    recipient = subprocess.check_output(
+                        ["age-keygen", "-y", str(keyfile)], text=True
+                    ).strip()
+                    started = time.perf_counter()
+                    vault = tmp_path / "backups"
+                    vault.mkdir(mode=0o700)
+                    old = vault / (
+                        "vendorproof-20000101T000000Z-" + uuid4().hex + ".age"
+                    )
+                    old.touch()
+                    os.utime(old, (1, 1))
+                    archive = backup(source, vault, recipient, 14)
+                    assert not old.exists()
+                    with pytest.raises(ValueError, match="digest"):
+                        restore(
+                            restored, archive, keyfile, restored.storage_root, "0" * 64
+                        )
+                    backup_seconds = time.perf_counter() - started
+                    probe_engine = engine_for(source)
+                    health = probes(source, probe_engine, vault)
+                    assert all(
+                        health["checks"][name]
+                        for name in ("database", "worker", "ocr", "backup", "queue")
+                    )
+                    print("operational probes", health)
+                    probe_engine.dispose()
+                    started = time.perf_counter()
+                    count = restore(
+                        restored,
+                        archive,
+                        keyfile,
+                        restored.storage_root,
+                        digest(archive),
+                    )
+                    restore_seconds = time.perf_counter() - started
+                    print(
+                        "recovery drill files, ciphertext_bytes, backup_s, restore_s:",
+                        count,
+                        archive.stat().st_size,
+                        round(backup_seconds, 3),
+                        round(restore_seconds, 3),
+                    )
+                    assert count == 6 and restored.storage_root != source.storage_root
+                    restored_app = create_app(restored)
+                    for outsider in [False, True]:
+                        with TestClient(
+                            restored_app,
+                            base_url="https://testserver",
+                            headers={"X-VP-Request": "1"},
+                        ) as client:
+                            assert client.get("/api/v1/account").status_code == 401
+                            assert client.post(
+                                "/api/v1/login",
+                                json={
+                                    "workspace": workspace + ("2" if outsider else ""),
+                                    "email": ("other" if outsider else "") + email,
+                                    "password": password,
+                                },
+                            ).is_success
+
+                            def local(endpoint):
+                                return client.get(endpoint.replace(api, "/api/v1", 1))
+
+                            if outsider:
+                                assert all(
+                                    local(endpoint).status_code == 404
+                                    for endpoint in [
+                                        exception_url,
+                                        url,
+                                        result_url,
+                                        supplier_url,
+                                    ]
+                                )
+                            else:
+                                assert (
+                                    local(url).content == pdf
+                                    and local(supplier_url).json()["name"]
+                                    == "Updated synthetic supplier"
+                                )
+                                assert (
+                                    local(url + "/processing/" + job).json()[
+                                        "classification"
+                                    ]["category"]
+                                    == "insurance"
+                                )
+                                assert (
+                                    local(exception_url).json()["history"] == history
+                                    and len(local(exception_url).json()["drafts"]) == 2
+                                )
+                                assert local(result_url).json()["id"] == run_id
+                    restored_app.state.engine.dispose()
                 page.goto(supplier_page)
                 viewer.close()
                 stop(api_proc)

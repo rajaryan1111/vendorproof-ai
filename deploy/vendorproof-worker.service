@@ -1,0 +1,26 @@
+[Unit]
+OnFailure=vendorproof-alert@%n.service
+Description=VendorProof worker
+After=postgresql.service clamav-daemon.service
+[Service]
+Type=simple
+User=vendorproof
+Group=vendorproof
+SupplementaryGroups=clamav
+WorkingDirectory=/opt/vendorproof/current/backend
+EnvironmentFile=/etc/vendorproof/app.env
+ExecStartPre=/opt/vendorproof/current/backend/.venv/bin/python -m app.operations preflight
+ExecStart=/opt/vendorproof/current/backend/.venv/bin/python -m app.intelligence.worker
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=130
+UMask=0077
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true
+PrivateDevices=true
+ReadOnlyPaths=/var/lib/vendorproof/objects
+MemoryMax=1536M
+[Install]
+WantedBy=multi-user.target

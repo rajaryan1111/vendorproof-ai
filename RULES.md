@@ -28,3 +28,7 @@ This file is authoritative for project engineering. When a change conflicts with
 ## Exception workflow constraints
 
 Use the supplier transaction lock and current sequence for ownership and lifecycle mutations. Keep human review events append-only. A corrected upload must preserve the original version and reference the finding. Require a fresh comparison and an explicit human decision before closing a corrected finding as resolved. Only controlled supplier-facing wording may enter a saved draft.
+
+## Deployment and recovery
+
+Promote an explicitly reviewed commit with passing release checks. Keep migrations and provisioning under a separate owner. Production startup must verify its scanner, parser isolation and schema. Bind uploaded content to a clean scan and matching digest. Preserve the original and each processing attempt. Restore only a trusted, digest-verified backup into an empty database and new private object path. Verify tenant denials and derived evidence before opening traffic.

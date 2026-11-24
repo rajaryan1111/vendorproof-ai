@@ -1,25 +1,23 @@
 import hashlib
-import io
-import logging
 import os
 import re
+import subprocess
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
-from fastapi.responses import FileResponse
-from pypdf import PdfReader
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
+from fastapi.responses import Response
 from starlette.concurrency import run_in_threadpool
 
 from .auth import identity, writer
 from .db import db, query
+from .intelligence.child import command
 from .intelligence.jobs import enqueue
 from .resolution.service import validate_upload
+from .safety import scan
 from .suppliers import event, lookup
 
 router = APIRouter(prefix="/api/v1/suppliers/{sid}/documents")
 LIMIT = 5 * 1024 * 1024
-logging.getLogger("pypdf").addHandler(logging.NullHandler())
-logging.getLogger("pypdf").propagate = False
 
 
 class PrivateFiles:
@@ -36,17 +34,33 @@ class PrivateFiles:
             os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600), "wb"
         ) as file:
             file.write(data)
+            file.flush()
+            os.fsync(file.fileno())
+        for directory in (path.parent, path.parent.parent):
+            fd = os.open(directory, os.O_RDONLY)
+            try:
+                os.fsync(fd)
+            finally:
+                os.close(fd)
 
 
-def validate_pdf(data):
+def validate_pdf(data, settings):
     if not data.startswith(b"%PDF-") or not data.rstrip().endswith(b"%%EOF"):
         raise HTTPException(415)
     try:
-        reader = PdfReader(io.BytesIO(data), strict=True)
-        if reader.is_encrypted or not reader.trailer["/Root"].get("/Pages"):
-            raise ValueError
-    except Exception as exc:
-        raise HTTPException(422) from exc
+        result = subprocess.run(
+            command("app.intelligence.validate", settings),
+            check=False,
+            input=data,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=12,
+            env={"PATH": os.defpath},
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise HTTPException(503) from exc
+    if result.returncode:
+        raise HTTPException(422)
 
 
 def document(conn, user, sid, key):
@@ -65,6 +79,7 @@ def document(conn, user, sid, key):
 @router.get("")
 def documents(
     sid: UUID,
+    page: int = Query(1, ge=1, le=1000000),
     user=Depends(identity, scope="function"),
     conn=Depends(db, scope="function"),
 ):
@@ -73,7 +88,8 @@ def documents(
         {**r, "status": "stored"}
         for r in query(
             conn,
-            "SELECT id,filename,bytes,created_at,replaces FROM documents WHERE organization_id=:tenant AND supplier_id=:sid AND NOT archived ORDER BY created_at DESC",
+            "SELECT id,filename,bytes,created_at,replaces FROM documents WHERE organization_id=:tenant AND supplier_id=:sid AND NOT archived ORDER BY created_at DESC,id LIMIT 20 OFFSET :offset",
+            offset=(page - 1) * 20,
             tenant=user.tenant,
             sid=sid,
         )
@@ -103,7 +119,8 @@ async def upload(
         if len(data) + len(chunk) > LIMIT:
             raise HTTPException(413)
         data.extend(chunk)
-    await run_in_threadpool(validate_pdf, data)
+    scanned = await run_in_threadpool(scan, data, request.app.state.settings)
+    await run_in_threadpool(validate_pdf, data, request.app.state.settings)
     if lookup(conn, user, sid, True).archived:
         raise HTTPException(409)
     digest = hashlib.sha256(data).hexdigest()
@@ -124,13 +141,14 @@ async def upload(
     key = uuid4()
     query(
         conn,
-        "INSERT INTO documents(id,organization_id,supplier_id,filename,bytes,digest,replaces) VALUES(:key,:tenant,:sid,:name,:size,:digest,:replaces)",
+        "INSERT INTO documents(id,organization_id,supplier_id,filename,bytes,digest,replaces,scanned_digest) VALUES(:key,:tenant,:sid,:name,:size,:digest,:replaces,:scan)",
         key=key,
         tenant=user.tenant,
         sid=sid,
         name=x_filename,
         size=len(data),
         digest=digest,
+        scan=digest if scanned else None,
         replaces=replaces,
     )
     if finding_id:
@@ -147,7 +165,7 @@ async def upload(
         )
     event(conn, user, sid, "Replaced document" if replaces else "Uploaded document")
     PrivateFiles(request.app.state.settings.storage_root).put(user.tenant, key, data)
-    enqueue(conn, user.tenant, sid, key)
+    enqueue(conn, user.tenant, sid, key, user.actor)
     return {"id": key, "status": "stored"}
 
 
@@ -162,11 +180,23 @@ def download(
     row = document(conn, user, sid, key)
     if user.role != "admin":
         raise HTTPException(403)
-    return FileResponse(
-        PrivateFiles(request.app.state.settings.storage_root).path(user.tenant, key),
-        filename=row.filename,
+    settings = request.app.state.settings
+    if settings.environment == "production" and row.scanned_digest != row.digest:
+        raise HTTPException(409)
+    with (
+        PrivateFiles(settings.storage_root).path(user.tenant, key).open("rb") as stream
+    ):
+        data = stream.read(LIMIT + 1)
+    if len(data) != row.bytes or hashlib.sha256(data).hexdigest() != row.digest:
+        raise HTTPException(409)
+    return Response(
+        data,
         media_type="application/pdf",
-        headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-store"},
+        headers={
+            "Content-Disposition": f'attachment; filename="{row.filename}"',
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "no-store",
+        },
     )
 
 

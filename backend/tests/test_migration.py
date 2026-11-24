@@ -111,6 +111,7 @@ def test_migrate_empty_schema(monkeypatch):
             "verification_reviews",
             "exception_corrections",
             "exception_drafts",
+            "worker_health",
             "processing_attempts",
             "activity",
             "login_limits",

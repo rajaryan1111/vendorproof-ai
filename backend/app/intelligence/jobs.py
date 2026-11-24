@@ -10,14 +10,15 @@ from .schema import ENGINE, SCHEMA
 router = APIRouter(prefix="/api/v1/suppliers/{sid}/documents/{key}/processing")
 
 
-def enqueue(conn, tenant, sid, key, attempt=1):
+def enqueue(conn, tenant, sid, key, actor, attempt=1):
     return query(
         conn,
-        """INSERT INTO processing_attempts(organization_id,supplier_id,document_id,attempt,implementation,schema_version)
-    VALUES(:tenant,:sid,:key,:attempt,:engine,:schema) RETURNING id,state,attempt""",
+        """INSERT INTO processing_attempts(organization_id,supplier_id,document_id,requested_by,attempt,implementation,schema_version)
+    VALUES(:tenant,:sid,:key,:actor,:attempt,:engine,:schema) RETURNING id,state,attempt""",
         tenant=tenant,
         sid=sid,
         key=key,
+        actor=actor,
         attempt=attempt,
         engine=ENGINE,
         schema=SCHEMA,
@@ -57,7 +58,17 @@ def process(
         return dict(last)
     if last and last.attempt >= 10:
         raise HTTPException(409)
-    return dict(enqueue(conn, user.tenant, sid, key, last.attempt + 1 if last else 1))
+    created = enqueue(
+        conn, user.tenant, sid, key, user.actor, last.attempt + 1 if last else 1
+    )
+    if last and last.state == "failed":
+        query(
+            conn,
+            "UPDATE processing_attempts SET available_at=now()+:seconds * interval '1 second' WHERE id=:id",
+            seconds=min(300, 2**last.attempt),
+            id=created.id,
+        )
+    return dict(created)
 
 
 @router.get("")
@@ -68,7 +79,7 @@ def history(
     conn=Depends(db, scope="function"),
 ):
     require_doc(conn, user.tenant, sid, key)
-    cols = """id,state,attempt,implementation,schema_version,created_at,started_at,finished_at,error_code,
+    cols = """id,requested_by,state,attempt,implementation,schema_version,created_at,started_at,finished_at,error_code,
     report->'classification'->>'category' AS category,
     jsonb_array_length(report->'pages') AS pages,
     (SELECT count(*) FROM jsonb_array_elements(report->'candidates') f WHERE f->>'status'='candidate') AS candidate_count"""

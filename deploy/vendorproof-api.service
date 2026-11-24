@@ -1,0 +1,26 @@
+[Unit]
+OnFailure=vendorproof-alert@%n.service
+Description=VendorProof api
+After=postgresql.service clamav-daemon.service
+[Service]
+Type=simple
+User=vendorproof
+Group=vendorproof
+SupplementaryGroups=clamav
+WorkingDirectory=/opt/vendorproof/current/backend
+EnvironmentFile=/etc/vendorproof/app.env
+ExecStartPre=/opt/vendorproof/current/backend/.venv/bin/python -m app.operations preflight
+ExecStart=/opt/vendorproof/current/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log --proxy-headers --forwarded-allow-ips 127.0.0.1 --limit-concurrency 12
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=130
+UMask=0077
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true
+PrivateDevices=true
+ReadWritePaths=/var/lib/vendorproof/objects
+MemoryMax=2G
+[Install]
+WantedBy=multi-user.target

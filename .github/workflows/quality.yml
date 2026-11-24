@@ -1,0 +1,53 @@
+name: Product release gate
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      VP_ENVIRONMENT: testing
+      VP_TEST_DATABASE_URL: postgresql+psycopg://localhost/vendorproof?host=/var/run/postgresql
+      VP_DATABASE_URL: postgresql+psycopg://localhost/vendorproof?host=/var/run/postgresql
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - name: Install host tools and create disposable database
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y postgresql postgresql-client tesseract-ocr clamav-daemon age bubblewrap
+          curl --fail --location --retry 3 https://github.com/caddyserver/caddy/releases/download/v2.11.9/caddy_2.11.9_linux_amd64.tar.gz -o "$RUNNER_TEMP/caddy.tar.gz"
+          echo "5b8cb7faf8726a2028ad96a66e54e6e81e8f361bc6175e5d22bbd997cc5177fb  $RUNNER_TEMP/caddy.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/caddy.tar.gz" -C "$RUNNER_TEMP" caddy
+          sudo install -m 0755 "$RUNNER_TEMP/caddy" /usr/local/bin/caddy
+          sudo systemctl start postgresql
+          sudo -u postgres createuser --createdb "$USER"
+          createdb vendorproof
+          python3 -m venv "$RUNNER_TEMP/uv"
+          "$RUNNER_TEMP/uv/bin/pip" install uv==0.12.8
+          echo "$RUNNER_TEMP/uv/bin" >> "$GITHUB_PATH"
+      - name: Frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm test
+          npm run build
+          npm audit
+      - name: Backend and browser
+        working-directory: backend
+        run: |
+          uv sync --locked --python /usr/bin/python3
+          uv run --locked python -m compileall -q app migrations tests evaluation
+          uv run --locked ruff check app migrations tests evaluation
+          uv run --locked ruff format --check app migrations tests evaluation
+          uv run --locked alembic upgrade head
+          uv run --locked pytest -q
+          uv run --locked pip-audit --local
+      - run: python3 ops/check_secrets.py

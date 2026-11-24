@@ -1,0 +1,12 @@
+[Unit]
+Description=Check recent VendorProof authentication failures
+OnFailure=vendorproof-alert@%n.service
+[Service]
+Type=oneshot
+DynamicUser=yes
+SupplementaryGroups=systemd-journal
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ExecStart=/usr/bin/python3 /opt/vendorproof/current/ops/auth_watch.py

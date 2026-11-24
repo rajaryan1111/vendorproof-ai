@@ -34,6 +34,7 @@ def identity(request: Request, conn=Depends(db, scope="function")):
     ).first()
     if not row:
         raise HTTPException(401)
+    request.state.tenant = str(row.tenant)
     return row
 
 

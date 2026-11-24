@@ -5,7 +5,7 @@ import json
 import os
 import signal
 import subprocess
-import sys
+import threading
 import time
 from uuid import UUID
 
@@ -14,6 +14,7 @@ from sqlalchemy import text
 from ..config import Settings
 from ..db import engine_for, query
 from ..documents import PrivateFiles
+from .child import command
 from .schema import ENGINE, SCHEMA, Report
 
 ERRORS = {
@@ -35,14 +36,13 @@ def execute(job, settings):
     with (
         path.open("rb") as stream,
         subprocess.Popen(
-            [
-                sys.executable,
-                "-m",
+            command(
                 "app.intelligence.runner",
+                settings,
                 str(job.document_id),
                 job.digest,
                 settings.ocr_language,
-            ],
+            ),
             stdin=stream,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
@@ -81,9 +81,9 @@ def run_one(engine, settings, job_id=None):
         )
         job = query(
             conn,
-            """SELECT j.*,d.digest,d.archived OR s.archived AS archived FROM processing_attempts j JOIN documents d ON d.id=j.document_id AND d.organization_id=j.organization_id
+            """SELECT j.*,d.digest,d.scanned_digest,d.archived OR s.archived AS archived FROM processing_attempts j JOIN documents d ON d.id=j.document_id AND d.organization_id=j.organization_id
         JOIN suppliers s ON s.id=j.supplier_id AND s.organization_id=j.organization_id
-        WHERE j.state='queued' AND j.implementation=:engine AND j.schema_version=:schema AND (CAST(:jid AS uuid) IS NULL OR j.id=:jid)
+        WHERE j.state='queued' AND j.available_at<=now() AND j.implementation=:engine AND j.schema_version=:schema AND (CAST(:jid AS uuid) IS NULL OR j.id=:jid)
         ORDER BY j.created_at LIMIT 1 FOR UPDATE OF j SKIP LOCKED""",
             jid=job_id,
             engine=ENGINE,
@@ -97,7 +97,12 @@ def run_one(engine, settings, job_id=None):
             id=job.id,
         )
     try:
-        report, error = (None, "archived") if job.archived else execute(job, settings)
+        if job.archived:
+            report, error = None, "archived"
+        elif settings.environment == "production" and job.scanned_digest != job.digest:
+            report, error = None, "scan_required"
+        else:
+            report, error = execute(job, settings)
     except (OSError, ValueError, TypeError):
         report, error = None, "processor_failed"
     with engine.begin() as conn:
@@ -119,9 +124,34 @@ if __name__ == "__main__":
     args = parser.parse_args()
     settings = Settings()
     engine = engine_for(settings)
-    while True:
+    stopped = threading.Event()
+    signal.signal(signal.SIGTERM, lambda *_: stopped.set())
+    signal.signal(signal.SIGINT, lambda *_: stopped.set())
+    next_heartbeat = 0.0
+    while not stopped.is_set():
+        if time.monotonic() >= next_heartbeat:
+            try:
+                langs = (
+                    subprocess.run(
+                        ["tesseract", "--list-langs"],
+                        capture_output=True,
+                        timeout=5,
+                        check=True,
+                    )
+                    .stdout.decode()
+                    .splitlines()
+                )
+            except (OSError, subprocess.SubprocessError):
+                langs = []
+            with engine.begin() as conn:
+                query(
+                    conn,
+                    "INSERT INTO worker_health VALUES(true,now(),:ocr) ON CONFLICT(singleton) DO UPDATE SET seen_at=excluded.seen_at,ocr_ready=excluded.ocr_ready",
+                    ocr=settings.ocr_language in langs,
+                )
+            next_heartbeat = time.monotonic() + 20
         worked = run_one(engine, settings, args.job)
         if args.once or args.job:
             break
         if not worked:
-            time.sleep(1)
+            stopped.wait(1)

@@ -92,13 +92,17 @@ const router = createBrowserRouter([
         path: "suppliers/:id",
         Component: Detail,
         action: manage,
-        loader: async ({ params }) => {
+        loader: async ({ params, request }) => {
+          const page = Math.max(
+            1,
+            Number(new URL(request.url).searchParams.get("documents")) || 1,
+          );
           const base = "/suppliers/" + params.id;
           const [s, docs] = await Promise.all([
             api(base),
-            api(base + "/documents"),
+            api(base + "/documents?page=" + page),
           ]);
-          return { s, docs };
+          return { s, docs, page };
         },
       },
     ],

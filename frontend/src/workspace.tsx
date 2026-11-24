@@ -122,9 +122,12 @@ export function Shell() {
   const nav = useNavigation();
   return (
     <>
+      <a className="skip" href="#workspace">
+        Skip to workspace
+      </a>
       <aside>
         <strong>VendorProof AI</strong>
-        <nav>
+        <nav aria-label="Workspace navigation">
           <NavLink to="/" end>
             Dashboard
           </NavLink>
@@ -132,7 +135,7 @@ export function Shell() {
           <NavLink to="/suppliers">Suppliers</NavLink>
         </nav>
       </aside>
-      <main>
+      <main id="workspace" tabIndex={-1}>
         <header>
           <strong>{user.workspace}</strong>
           <span>
@@ -165,7 +168,7 @@ export function Home() {
           ] as const
         ).map((k) => (
           <section key={k}>
-            <p>{k === "total" ? "Total suppliers" : k.replace("_", " ")}</p>
+            <p>{k === "total" ? "Total suppliers" : k.replaceAll("_", " ")}</p>
             <strong>{data[k]}</strong>
           </section>
         ))}
@@ -295,7 +298,11 @@ export async function save({ params, request }: ActionFunctionArgs) {
   }
 }
 export function Detail() {
-  const { s, docs } = useLoaderData() as { s: Supplier; docs: Doc[] };
+  const { s, docs, page } = useLoaderData() as {
+    s: Supplier;
+    docs: Doc[];
+    page: number;
+  };
   const user = useOutletContext<Account>();
   const edit = writable(user.role) && !s.archived;
   return (
@@ -366,6 +373,17 @@ export function Detail() {
             )}
           </div>
         ))}
+        {(page > 1 || docs.length === 20) && (
+          <footer>
+            {page > 1 && (
+              <Link to={"?documents=" + (page - 1)}>Previous documents</Link>
+            )}
+            Page {page}
+            {docs.length === 20 && (
+              <Link to={"?documents=" + (page + 1)}>More documents</Link>
+            )}
+          </footer>
+        )}
         {edit && (
           <Form method="post" encType="multipart/form-data">
             <label>

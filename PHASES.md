@@ -64,6 +64,8 @@ Complete on `feat/phase-4-exception-resolution`. PostgreSQL migration, isolation
 
 ## PHASE 5 — Production readiness
 
+Deployment preparation and disposable release validation delivered. Live deployment and production sign-off are pending an approved target and its operating controls. See MEMORY.md and the deployment checklist.
+
 - **Objective:** prepare an evidence-backed operational deployment.
 - **Scope:** security hardening, durable background jobs, performance, observability, end-to-end coverage, deployment, backups/restore, retention/deletion validation, demo environment.
 - **Dependencies:** prior phases and identified deployment/customer requirements.

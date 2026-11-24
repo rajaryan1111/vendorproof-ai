@@ -144,6 +144,7 @@ def run(
 @router.get("/runs")
 def runs(
     sid: UUID,
+    page: int = Query(1, ge=1, le=1000000),
     user=Depends(identity, scope="function"),
     conn=Depends(db, scope="function"),
 ):
@@ -152,7 +153,8 @@ def runs(
         dict(r)
         for r in query(
             conn,
-            "SELECT id,created_at,policy_version,rule_version,as_of FROM verification_runs WHERE organization_id=:tenant AND supplier_id=:sid ORDER BY created_at DESC,id DESC",
+            "SELECT id,created_at,policy_version,rule_version,as_of FROM verification_runs WHERE organization_id=:tenant AND supplier_id=:sid ORDER BY created_at DESC,id DESC LIMIT 20 OFFSET :offset",
+            offset=(page - 1) * 20,
             **scope(user, sid),
         )
     ]

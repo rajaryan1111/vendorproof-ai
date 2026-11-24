@@ -1,8 +1,12 @@
 # VendorProof AI
 
-VendorProof AI is planned as a supplier-document verification workspace for procurement, finance, compliance, and operations teams. It aims to organize supplier documents, surface missing, expired, inconsistent, or uncertain information, and help people resolve findings using traceable evidence. AI will not decide fraud or approve suppliers.
+VendorProof AI is a supplier-document review workspace for procurement, finance, compliance and operations. It links deterministic findings to source documents and records the human decisions that resolve exceptions.
 
 This branch includes workspace sign-in, private versioned PDFs, local extraction, evidence-backed verification and a human-reviewed exception queue.
+
+## Deployment release
+
+The prepared deployment uses Caddy, systemd, PostgreSQL, private persistent volumes, ClamAV and a separate processing worker. The [deployment checklist and recovery runbook](deploy/OPERATIONS.md) covers environment setup, migrations, grants, HTTPS, monitoring, backups, restore and rollback. Live rollout requires a customer-approved target and operational sign-off.
 
 ## Run locally
 
@@ -48,7 +52,7 @@ Run `uv run python -m evaluation.v1.measure` from `backend/` to generate the eva
 
 ## Quality checks
 
-Run `npm ci` in `frontend/` first. Create a separate disposable PostgreSQL database owned by the test role. Export `VP_TEST_DATABASE_URL` as its SQLAlchemy psycopg URL. The suite adds synthetic users and documents and runs migrations inside a generated schema. Local ports 55173 and 58001 must be free for the browser test.
+Run `npm ci` in `frontend/` first. Create a separate disposable PostgreSQL database owned by the test role. Export `VP_TEST_DATABASE_URL` as its SQLAlchemy psycopg URL. The suite adds synthetic users and documents and runs migrations inside a generated schema. Use a test role with CREATEDB for the isolated recovery exercise. Install age/age-keygen, Caddy 2.11.9, OpenSSL, ClamAV (including clamd), Chrome and Tesseract. Linux additionally requires functional non-root bubblewrap user namespaces. Build the frontend with `npm run build` before the HTTPS test. Free loopback ports 55173, 58001, 58002 and 58443. Use `VP_ENVIRONMENT=testing` for the suite.
 
 ```sh
 cd backend

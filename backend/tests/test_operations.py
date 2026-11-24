@@ -159,8 +159,9 @@ def test_parser_deployment_boundary(tmp_path):
             capture_output=True,
             env={"PATH": os.defpath},
             timeout=15,
-            check=True,
+            check=False,
         )
+        assert result.returncode == 0, result.stderr.decode(errors="replace")
         assert result.stdout.strip() == b"parser-ready"
     else:
         with pytest.raises(ValidationError):

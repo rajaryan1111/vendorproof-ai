@@ -25,6 +25,15 @@ jobs:
           echo "5b8cb7faf8726a2028ad96a66e54e6e81e8f361bc6175e5d22bbd997cc5177fb  $RUNNER_TEMP/caddy.tar.gz" | sha256sum --check
           tar -xzf "$RUNNER_TEMP/caddy.tar.gz" -C "$RUNNER_TEMP" caddy
           sudo install -m 0755 "$RUNNER_TEMP/caddy" /usr/local/bin/caddy
+          # Apply Ubuntu's shipped sandbox profile when the runner enables AppArmor.
+          if [ -r /sys/module/apparmor/parameters/enabled ] && grep -q Y /sys/module/apparmor/parameters/enabled; then
+            for profile in /etc/apparmor.d/bwrap-userns-restrict /etc/apparmor.d/bwrap; do
+              if [ -f "$profile" ]; then
+                sudo apparmor_parser -r "$profile"
+                break
+              fi
+            done
+          fi
           sudo systemctl start postgresql
           sudo -u postgres createuser --createdb "$USER"
           createdb vendorproof
